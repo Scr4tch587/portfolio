@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, MoreHorizontal, Heart, Pause, Linkedin, Github, FileText } from 'lucide-react';
+import { Play, MoreHorizontal, Heart, Pause, FileText } from 'lucide-react';
+import SecondaryCapsuleButton from '../components/SecondaryCapsuleButton';
+import LikeButton from '../components/LikeButton';
 import { usePlayer } from '../context/PlayerContext';
 import ImageGalleryModal from '../components/ImageGalleryModal';
 import SocialsMenu from '../components/SocialsMenu';
 import StreamToast from '../components/StreamToast';
 import StreamCounter from '../components/StreamCounter';
 import FirstStreamBadge from '../components/FirstStreamBadge';
+import LikedProjectsCard from '../components/LikedProjectsCard';
+import ArtistPickCard from '../components/ArtistPickCard';
 import { useStreamTracker } from '../hooks/useStreamTracker';
 import aboutImage from '../assets/profilephoto1.jpg';
 import profilePhoto2 from '../assets/profilephoto2.jpg';
@@ -38,6 +42,7 @@ const initialSingles = [
 
 const Home = () => {
   const { playProject, currentProject, isPlaying, togglePlay, streamCompleteTrigger } = usePlayer();
+  const { toggleLike, isLiked } = usePlayer();
   const [discographyFilter, setDiscographyFilter] = useState('albums');
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -105,16 +110,15 @@ const Home = () => {
                 p.id === currentProject.id ? { ...p, views: p.views + 1 } : p
             )
         );
-        // Update Firestore
-        const projectRef = doc(db, "projects", String(currentProject.id));
-        // Use setDoc with merge: true to create if it doesn't exist
-        setDoc(projectRef, { views: increment(1) }, { merge: true })
-            .then(() => {
-                console.log("Firestore updated successfully");
-                setAnimatedProjectId(currentProject.id); // Trigger animation
-                setTimeout(() => setAnimatedProjectId(null), 500); // Reset animation after 500ms
-            })
-            .catch(err => console.error("Error updating Firestore:", err));
+      // Trigger immediate UI animation (don't wait for Firestore)
+      setAnimatedProjectId(currentProject.id);
+      setTimeout(() => setAnimatedProjectId(null), 500);
+
+      // Update Firestore asynchronously (don't block UI)
+      const projectRef = doc(db, "projects", String(currentProject.id));
+      setDoc(projectRef, { views: increment(1) }, { merge: true })
+        .then(() => console.log("Firestore updated successfully"))
+        .catch(err => console.error("Error updating Firestore:", err));
     }
   }, [streamCompleteTrigger, currentProject, firestoreInitialized]);
 
@@ -180,22 +184,50 @@ const Home = () => {
 
           <div className="relative z-10">
               {/* Action Bar */}
-              <div className="flex items-center gap-6 px-8 py-4 relative">
+              <div className="flex flex-wrap items-center gap-6 px-8 py-4 relative">
                 <button 
                     onClick={handlePlayRandom}
-                    className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
+                    className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform focus:outline-none"
                 >
                   <Play size={22} fill="black" className="ml-1 text-black" />
                 </button>
-                <a href="https://www.linkedin.com/in/kai-zhang-waterloo/" target="_blank" rel="noopener noreferrer">
-                    <Linkedin className="text-gray-400 hover:text-white cursor-pointer" />
-                </a>
-                <a href="https://github.com/Scr4tch587" target="_blank" rel="noopener noreferrer">
-                    <Github className="text-gray-400 hover:text-white cursor-pointer" />
-                </a>
-                <a href="/resume.pdf" download>
-                    <FileText className="text-gray-400 hover:text-white cursor-pointer" />
-                </a>
+                {/* Capsule group: LinkedIn / GitHub / Resume */}
+                <div className="flex items-center gap-3 ml-6 mr-4">
+                  {/* Larger gap between Play and capsules achieved by parent gap + this ml-6; increased mr for spacing to Follow */}
+                  <div className="flex items-center gap-3">
+                    <SecondaryCapsuleButton
+                      href="https://www.linkedin.com/in/kai-zhang-waterloo/"
+                      ariaLabel="LinkedIn"
+                      tooltip="View LinkedIn"
+                    >
+                      {/* Minimal inline LinkedIn mark (single-color) */}
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path d="M4.98 3.5C4.98 4.88 3.88 6 2.5 6S0 4.88 0 3.5 1.1 1 2.5 1 4.98 2.12 4.98 3.5zM0 8h5v13H0zM7 8h4.8v1.8h.1c.7-1.3 2.4-2.7 4.9-2.7C22.5 7.1 24 9.8 24 14.2V21H19v-6.1c0-1.5-.1-3.5-2.1-3.5-2.1 0-2.4 1.6-2.4 3.4V21H7V8z" />
+                      </svg>
+                    </SecondaryCapsuleButton>
+
+                    <SecondaryCapsuleButton
+                      href="https://github.com/Scr4tch587"
+                      ariaLabel="GitHub"
+                      tooltip="View GitHub"
+                    >
+                      {/* Minimal inline GitHub mark (single-color) */}
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path d="M12 .5C5.73.5.81 5.42.81 11.69c0 4.86 3.14 8.98 7.5 10.44.55.1.75-.24.75-.53v-1.86c-3.04.66-3.68-1.46-3.68-1.46-.5-1.28-1.22-1.62-1.22-1.62-.99-.67.08-.66.08-.66 1.1.08 1.68 1.13 1.68 1.13.97 1.66 2.54 1.18 3.16.9.1-.7.38-1.18.69-1.45-2.43-.28-4.99-1.22-4.99-5.42 0-1.2.42-2.18 1.12-2.95-.11-.28-.49-1.42.11-2.96 0 0 .9-.29 2.95 1.12A10.2 10.2 0 0 1 12 6.8c.9 0 1.8.12 2.63.35 2.05-1.41 2.95-1.12 2.95-1.12.6 1.54.22 2.68.11 2.96.7.77 1.12 1.75 1.12 2.95 0 4.2-2.57 5.13-5.01 5.4.39.33.73.97.73 1.96v2.9c0 .29.2.64.76.53 4.36-1.46 7.5-5.58 7.5-10.44C23.19 5.42 18.27.5 12 .5z" />
+                      </svg>
+                    </SecondaryCapsuleButton>
+
+                    <SecondaryCapsuleButton
+                      href="/resume.pdf"
+                      ariaLabel="Resume"
+                      tooltip="Read resume"
+                      newTab={true}
+                      download={false}
+                    >
+                      <FileText className="w-4 h-4" />
+                    </SecondaryCapsuleButton>
+                  </div>
+                </div>
                 <button 
                     ref={followButtonRef}
                     onClick={() => setIsSocialsMenuOpen(!isSocialsMenuOpen)}
@@ -208,6 +240,14 @@ const Home = () => {
                     onClose={() => setIsSocialsMenuOpen(false)} 
                     anchorRef={followButtonRef}
                 />
+                {/* Added: Liked Projects and Artist Pick cards to the right of Follow */}
+                <div className={currentProject ? 'w-full flex flex-col gap-4 mt-4' : 'ml-auto mr-8'}>
+                  <div className={`flex ${currentProject ? 'flex-row items-start gap-12' : 'items-start gap-24'}`}>
+                    <LikedProjectsCard />
+                    {/* pass the Wisp project (use initialAlbums default) */}
+                    <ArtistPickCard project={initialAlbums.find(a => a.id === 103)} />
+                  </div>
+                </div>
               </div>
 
               {/* Popular Section (Top Projects) */}
@@ -259,8 +299,13 @@ const Home = () => {
                                  />
                                </div>
                             <span className="flex items-center justify-end gap-4">
-                                <span className="group-hover:opacity-100 opacity-0 transition-opacity">
-                                    <Heart size={16} className="text-gray-400 hover:text-white" />
+                                <span className={`group-hover:opacity-100 opacity-0 transition-opacity ${isLiked(project.id) ? 'opacity-100' : ''}`}>
+                                            <LikeButton
+                                              isLiked={isLiked(project.id)}
+                                              onToggle={() => toggleLike(project.id)}
+                                              ariaLabel={isLiked(project.id) ? 'Unlike' : 'Like'}
+                                              size={20}
+                                            />
                                 </span>
                                 <span className="text-sm">{project.duration}</span>
                             </span>
@@ -356,6 +401,7 @@ const Home = () => {
          show={streamTracker.showToast}
          onConfirm={streamTracker.confirmStream}
          countdown={streamTracker.autoConfirmCountdown}
+         isFirstStream={streamTracker.isFirstStream}
        />
     </div>
   );

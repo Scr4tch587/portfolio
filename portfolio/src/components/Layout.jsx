@@ -49,12 +49,12 @@ const Layout = ({ children }) => {
                 {children}
             </main>
             
-            {/* Right Sidebar (Only shows if there's an active project or if we want it persistently there) */}
-            {currentProject && <RightSidebar />}
+            {/* Right Sidebar (managed internally for enter/exit animations) */}
+            <RightSidebar />
         </div>
 
         {/* Fixed Player Bar */}
-        {currentProject && <PlayerBar />}
+          <PlayerBar />
     </div>
   );
 };

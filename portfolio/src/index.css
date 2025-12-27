@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Spotify-inspired font stack */
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* Stream counter animations */
 @keyframes streamCounterGlow {
 	0%, 100% {
@@ -14,16 +21,74 @@
 	animation: streamCounterGlow 0.4s ease-in-out;
 }
 
-/* Toast slide up animation */
+/* Toast slide up animation (Y-axis only to avoid horizontal transform conflicts) */
 @keyframes slideUp {
 	from {
 		opacity: 0;
-		transform: translate(-50%, 20px);
+		transform: translateY(20px);
 	}
 	to {
 		opacity: 1;
-		transform: translate(-50%, 0);
+		transform: translateY(0);
 	}
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+}
+
+/* Toast enter/exit classes for smooth transitions (use transforms + opacity) */
+.toast-enter {
+	opacity: 0;
+	transform: translateY(18px);
+	will-change: transform, opacity;
+}
+.toast-enter-active {
+	animation: slideUp 260ms cubic-bezier(.2,.9,.2,1) both;
+}
+.toast-exit {
+	opacity: 1;
+	transform: translateY(0);
+}
+.toast-exit-active {
+	animation: slideDown 220ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+/* Fade-in-up utility for sidebars/player bar */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.animate-fade-in-up {
+	animation: fadeInUp 280ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+/* Fade-out-down utility for sidebars/player bar */
+@keyframes fadeOutDown {
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+.animate-fade-out-down {
+	animation: fadeOutDown 220ms cubic-bezier(.2,.9,.2,1) both;
 }
 
 /* Fade in animation for badges */
@@ -78,7 +143,7 @@
 	@keyframes slideUp {
 		from, to {
 			opacity: 1;
-			transform: translate(-50%, 0);
+			transform: translateY(0);
 		}
 	}
 }
@@ -103,4 +168,32 @@
 /* Optional: subtle shadow when scrolling (Layout toggles `scrolling`) */
 .scrolling {
 	box-shadow: inset 0 -8px 12px rgba(0,0,0,0.3);
+}
+
+/* Capsule tooltip and reduced-motion support */
+.capsule { /* base visuals handled by Tailwind classes; keep this for easy overrides */ }
+.capsule-tooltip {
+	transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.capsule, .capsule-tooltip {
+		transition: none !important;
+		transform: none !important;
+		opacity: 1 !important;
+	}
+}
+
+/* Like pop animation for when a song is liked */
+@keyframes likePop {
+	0% { transform: scale(1); }
+	50% { transform: scale(1.25); }
+	100% { transform: scale(1); }
+}
+.like-pop {
+	animation: likePop 260ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.like-pop { animation: none !important; }
 }

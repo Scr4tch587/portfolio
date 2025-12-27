@@ -1,22 +1,27 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Mic2, LayoutList, Volume2, Maximize2, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Mic2, LayoutList, Volume2, Maximize2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
+import LikeButton from './LikeButton';
 
 const PlayerBar = () => {
- const { currentProject, isPlaying, togglePlay, currentTime, durationSeconds, streamConfirmedTrigger } = usePlayer();
- const [showHaptic, setShowHaptic] = useState(false);
+  const { currentProject, isPlaying, togglePlay, currentTime, durationSeconds, toggleLike, isLiked } = usePlayer();
 
-  // Trigger haptic effect when stream is confirmed
+  const [visible, setVisible] = useState(!!currentProject);
+  const [animState, setAnimState] = useState(currentProject ? 'enter' : 'exit');
+  const EXIT_MS = 220;
+
   useEffect(() => {
-    if (streamConfirmedTrigger > 0) {
-      setShowHaptic(true);
-      const timer = setTimeout(() => setShowHaptic(false), 150);
-      return () => clearTimeout(timer);
+    if (currentProject) {
+      setVisible(true);
+      setAnimState('enter');
+    } else if (visible) {
+      setAnimState('exit');
+      const t = setTimeout(() => setVisible(false), EXIT_MS + 20);
+      return () => clearTimeout(t);
     }
-  }, [streamConfirmedTrigger]);
+  }, [currentProject]);
 
-  if (!currentProject) return null;
+  if (!visible) return null;
 
   const formatTime = (seconds) => {
     const roundedSeconds = Math.round(seconds);
@@ -26,25 +31,36 @@ const PlayerBar = () => {
   };
 
   const progressPercentage = durationSeconds > 0 ? (currentTime / durationSeconds) * 100 : 0;
+  const title = currentProject?.title || '';
+  const artist = currentProject?.artist || 'You';
 
-  return (
-     <div className={`h-24 bg-black border-t border-[#282828] px-4 flex items-center justify-between fixed bottom-0 w-full z-50 text-white ${showHaptic ? 'haptic-pulse' : ''}`}>
+    const containerClass = animState === 'enter' ? 'animate-fade-in-up' : 'animate-fade-out-down';
+
+    return (
+      <div className={`h-24 bg-black border-t border-[#282828] px-4 flex items-center justify-between fixed bottom-0 w-full z-50 text-white ${containerClass}`}>
       
       {/* Left: Project Info */}
       <div className="flex items-center gap-4 w-[30%] min-w-[180px]">
         <div className="w-14 h-14 bg-gray-700 rounded flex items-center justify-center shrink-0 overflow-hidden">
-             {currentProject.image ? (
-               <img src={currentProject.image} alt={currentProject.title} className="w-full h-full object-cover" />
+             {currentProject?.image ? (
+               <img src={currentProject?.image} alt={title} className="w-full h-full object-cover" />
              ) : (
-               <span className="font-bold text-sm">{currentProject.title[0]}</span>
+               <span className="font-bold text-sm">{title ? title[0] : ''}</span>
              )}        </div>
         <div className="flex flex-col overflow-hidden">
-          <span className="font-medium text-sm hover:underline cursor-pointer truncate">{currentProject.title}</span>
+          <span className="font-medium text-sm hover:underline cursor-pointer truncate">{title}</span>
           <span className="text-xs text-gray-400 hover:underline cursor-pointer hover:text-white transition-colors truncate">
-            {currentProject.artist || 'You'}
+            {artist}
           </span>
         </div>
-        <Heart size={16} className="text-gray-400 hover:text-white cursor-pointer ml-2" />
+        <div className="ml-3">
+          <LikeButton
+            isLiked={isLiked(currentProject?.id)}
+            onToggle={() => toggleLike(currentProject?.id)}
+            ariaLabel={isLiked(currentProject?.id) ? 'Unlike' : 'Like'}
+            size={20}
+          />
+        </div>
       </div>
 
       {/* Center: Controls */}
@@ -54,7 +70,7 @@ const PlayerBar = () => {
           <SkipBack size={20} className="text-gray-400 hover:text-white cursor-pointer" fill="currentColor" />
           
           <button 
-            className={`w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform active:scale-95 ${showHaptic ? 'micro-shake' : ''}`}
+            className={`w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform active:scale-95 focus:outline-none`}
             onClick={togglePlay}
           >
             {isPlaying ? (
@@ -83,7 +99,7 @@ const PlayerBar = () => {
                 <div className="hidden group-hover:block absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow"></div>
              </div>
           </div>
-          <span>{currentProject.duration || '3:45'}</span>
+          <span>{currentProject?.duration || '3:45'}</span>
         </div>
       </div>
 
