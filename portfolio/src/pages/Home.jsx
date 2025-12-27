@@ -212,7 +212,7 @@ const Home = () => {
 
               {/* Popular Section (Top Projects) */}
               <div className="px-8 mt-4">
-                <h2 className="text-2xl font-bold mb-4">Popular</h2>
+                <h2 className="text-2xl font-bold mb-4 text-left">Popular</h2>
                 <div className="flex flex-col">
                     {popularProjects.map((project, index) => (
                         <div 
@@ -277,7 +277,7 @@ const Home = () => {
               
               {/* Discography Section */}
               <div className="px-8 mt-8">
-                <h2 className="text-2xl font-bold mb-4">Discography</h2>
+                <h2 className="text-2xl font-bold mb-4 text-left">Discography</h2>
                 
                 {/* Filter Tabs */}
                 <div className="flex gap-2 mb-4">
@@ -323,7 +323,7 @@ const Home = () => {
 
               {/* About Section */}
               <div className="px-8 mt-8 mb-20">
-                <h2 className="text-2xl font-bold mb-4">About</h2>
+                <h2 className="text-2xl font-bold mb-4 text-left">About</h2>
                 <div 
                     onClick={() => setIsGalleryOpen(true)}
                     className="relative w-full h-[600px] rounded-lg bg-cover bg-center overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform duration-300 group"

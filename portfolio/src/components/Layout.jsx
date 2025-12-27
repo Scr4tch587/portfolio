@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import RightSidebar from './RightSidebar';
-import Sidebar from './Sidebar';
 import PlayerBar from './PlayerBar';
 import { usePlayer } from '../context/PlayerContext';
 
@@ -39,9 +38,8 @@ const Layout = ({ children }) => {
 
   return (
     <div className="bg-black min-h-screen font-sans text-white flex flex-col h-screen overflow-hidden">
-      <Sidebar />
         {/* Main Content Area + Right Sidebar */}
-      <div className={`flex flex-1 p-2 ml-64 ${currentProject ? 'gap-2' : ''} overflow-hidden ${currentProject ? 'pb-24' : ''}`}>
+      <div className={`flex flex-1 p-2 ${currentProject ? 'gap-2' : ''} overflow-hidden ${currentProject ? 'pb-24' : ''}`}>
             
             {/* Main Center Panel */}
             <main 
