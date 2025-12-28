@@ -26,6 +26,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Verify VITE_FIREBASE_PROJECT_ID (masked)
+        shell: bash
+        run: |
+          if [ -z "$VITE_FIREBASE_PROJECT_ID" ]; then
+            echo "PROJECT_ID not set"
+            exit 1
+          fi
+          # Print only the last 6 characters so logs confirm injection without exposing full value
+          echo "PROJECT_ID_LAST6=${VITE_FIREBASE_PROJECT_ID: -6} (last 6 chars)"
+
       - name: Use Node.js 20 (required by Vite)
         uses: actions/setup-node@v4
         with:
