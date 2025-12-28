@@ -23,17 +23,21 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies (portfolio)
+        run: |
+          cd portfolio
+          npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build (portfolio)
+        run: |
+          cd portfolio
+          npm run build
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: dist
+          folder: portfolio/dist
           clean: true
           token: ${{ secrets.GITHUB_TOKEN }}
           cname: kaizhang.ca
