@@ -13,6 +13,8 @@ import ArtistPickCard from '../components/ArtistPickCard';
 import { useStreamTracker } from '../hooks/useStreamTracker';
 import aboutImage from '../assets/profilephoto1.jpg';
 import profilePhoto2 from '../assets/profilephoto2.jpg';
+import profilePhoto4 from '../assets/profilephoto4.jpg';
+import profilePhoto5 from '../assets/profilephoto5.jpg';
 import herobackground from '../assets/herobackground.jpg';
 import waterlooCrest from '../assets/waterloo_logo.webp';
 import orbitalLogo from '../assets/orbitallogo.png';
@@ -28,16 +30,16 @@ import { collection, getDocs, doc, setDoc, increment } from "firebase/firestore"
 const initialProjects = [];
 
 const initialAlbums = [
-  { id: 1, title: 'UW Orbital', year: 2024, type: 'Album', image: orbitalLogo, duration: '3:45', description: 'Firmware for a CubeSat satellite. Handled communication protocols and sensor data acquisition.', tags: ['C', 'C++', 'FreeRTOS', 'STM32'], orderingPriority: 1, plays: '1,203,400' },
-  { id: 103, title: 'Wisp', year: 2024, type: 'Album', image: wispLogo, duration: '2:17', description: 'A lightweight, ephemeral messaging application designed for privacy and speed. Messages disappear after reading.', tags: ['React', 'Firebase', 'Tailwind CSS'], orderingPriority: 3 },
-  { id: 104, title: 'Rootify', year: 2025, type: 'Album', image: rootifyLogo, duration: '3:30', description: 'Smart plant care companion app. Tracks watering schedules, sunlight exposure, and growth progress.', tags: ['React Native', 'Expo', 'Node.js'], orderingPriority: 2 },
-];
+  { id: 1, title: 'UW Orbital', year: 2025, type: 'Album', image: orbitalLogo, duration: '3:45', description: 'University of Waterloo satellite design team competing in the Canadian Satellite Design Challenge, building a launch-ready 3U CubeSat.\n\n As a full stack developer for the ground station, I improve how mission data is displayed and managed.', tags: ['FastAPI', 'React', 'PostgreSQL'], orderingPriority: 1, github: 'https://github.com/UWOrbital/OBC-firmware', website: 'https://www.uworbital.com/' },
+  { id: 103, title: 'Wisp', year: 2025, type: 'Album', image: wispLogo, duration: '2:17', description: 'Mobile app that enables users to capture, refine, and organize ideas in under 5 seconds using only their voice through real-time AI.', tags: ['React Native', 'FastAPI', 'OpenAI API', 'MCP', 'Supabase'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/wisp', website: '' },
+  { id: 104, title: 'Rootify', year: 2025, type: 'Album', image: rootifyLogo, duration: '3:30', description: 'Evidence-first music discovery system that maps artist influences using real textual sources. \n\n Currently WIP', tags: ['spaCy', 'FastAPI', 'SQLAlchemy', 'PostgreSQL'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/Rootify-2.0', website: '' },
+];  
 
 const initialSingles = [
-  { id: 204, title: 'Waypost', year: 2023, type: 'Single', image: waypostLogo, duration: '4:02', description: 'An offline-first navigation tool for hikers and outdoor enthusiasts. Features topographic maps and trail recording.', tags: ['Flutter', 'Dart', 'Mapbox'], orderingPriority: 2 },
-  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'My personal portfolio website (this one!). A showcase of my projects, music, and skills, built with a Spotify-inspired UI.', tags: ['React', 'Vite', 'Tailwind CSS', 'Firebase'], orderingPriority: 1 },
-  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Interactive periodic table for chemistry students. Visualizes element properties and trends.', tags: ['Svelte', 'D3.js', 'TypeScript'], orderingPriority: 3 },
-  { id: 307, title: "Kai's Music Blog", year: 2025, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews, theory analysis, and playlists. Features a custom CMS.', tags: ['Next.js', 'Sanity.io', 'Vercel'], orderingPriority: 4 },
+  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description: 'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy \n\n 2nd place at Newhacks 2025', tags: ['FastAPI', 'React', 'Firebase', 'Cloudinary'], orderingPriority: 1, github: 'https://github.com/Scr4tch587/waypost', website: '' },
+  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you’re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
+  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
+  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 3, github: '', website: 'https://kaizhang.substack.com/' },
 ];
 
 const Home = () => {
@@ -54,7 +56,9 @@ const Home = () => {
   // Stream tracking for currently playing project
   const streamTracker = useStreamTracker(currentProject?.id);
 
-  const galleryImages = [aboutImage, profilePhoto2];
+  // Monthly listeners: static 0 (feature removed)
+
+  const galleryImages = [aboutImage, profilePhoto2, profilePhoto4, profilePhoto5];
 
   // Combine all project types for view tracking
   const [allProjects, setAllProjects] = useState([]); // Initialize as empty array
@@ -80,9 +84,11 @@ const Home = () => {
           const defaultViews = localProject.plays ? parseInt(localProject.plays.replace(/,/g, ''), 10) : 0;
           
           return {
-            ...localProject,
-            views: firestoreProject ? firestoreProject.views : defaultViews,
-          };
+              ...localProject,
+              views: firestoreProject ? firestoreProject.views : defaultViews,
+              github: firestoreProject && firestoreProject.github ? firestoreProject.github : (localProject.github || ''),
+              website: firestoreProject && firestoreProject.website ? firestoreProject.website : (localProject.website || ''),
+            };
         });
 
         // Ensure all Firestore projects are included, even if not in initial local lists
@@ -119,6 +125,8 @@ const Home = () => {
       setDoc(projectRef, { views: increment(1) }, { merge: true })
         .then(() => console.log("Firestore updated successfully"))
         .catch(err => console.error("Error updating Firestore:", err));
+
+      // monthly listener tracking disabled — keep behavior minimal and local
     }
   }, [streamCompleteTrigger, currentProject, firestoreInitialized]);
 
@@ -218,11 +226,11 @@ const Home = () => {
                     </SecondaryCapsuleButton>
 
                     <SecondaryCapsuleButton
-                      href="/resume.pdf"
+                      href="/kzhangresume.pdf"
                       ariaLabel="Resume"
-                      tooltip="Read resume"
-                      newTab={true}
-                      download={false}
+                      tooltip="Download resume"
+                      newTab={false}
+                      download="kzhangresume.pdf"
                     >
                       <FileText className="w-4 h-4" />
                     </SecondaryCapsuleButton>
@@ -242,10 +250,12 @@ const Home = () => {
                 />
                 {/* Added: Liked Projects and Artist Pick cards to the right of Follow */}
                 <div className={currentProject ? 'w-full flex flex-col gap-4 mt-4' : 'ml-auto mr-8'}>
-                  <div className={`flex ${currentProject ? 'flex-row items-start gap-12' : 'items-start gap-24'}`}>
+                  <div className={`flex ${currentProject ? 'flex-row items-start gap-20' : 'items-start gap-32'}`}>
                     <LikedProjectsCard />
                     {/* pass the Wisp project (use initialAlbums default) */}
-                    <ArtistPickCard project={initialAlbums.find(a => a.id === 103)} />
+                    <div className="mr-16">
+                      <ArtistPickCard project={initialAlbums.find(a => a.id === 103)} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -377,7 +387,7 @@ const Home = () => {
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors"></div>
                     <div className="absolute bottom-8 left-8 z-10">
                         <p className="text-white text-base font-bold">
-                            1,203,432 monthly listeners
+                          0 monthly listeners
                         </p>
                         <p className="text-white text-base line-clamp-3 max-w-2xl">
                             vancouver -&gt; waterloo. seeking summer 2026 internships. thanks for stopping by!

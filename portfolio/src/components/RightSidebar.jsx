@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MoreHorizontal } from 'lucide-react';
+import { X } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 
 const RightSidebar = () => {
@@ -32,7 +32,7 @@ const RightSidebar = () => {
 
   const hasProject = !!currentProject;
   const title = currentProject?.title || 'Browse Projects';
-  const artist = hasProject ? (currentProject?.artist || 'You') : 'Select a project to view details';
+  const artist = hasProject ? (currentProject?.artist || 'Kai Zhang') : 'Select a project to view details';
 
   const containerClass = animState === 'enter' ? 'animate-fade-in-up' : 'animate-fade-out-down';
   if (!visible) return null;
@@ -42,7 +42,6 @@ const RightSidebar = () => {
       <div className="flex justify-between items-center mb-6">
         <span className="font-bold text-base hover:underline cursor-pointer text-left">{title}</span>
         <div className="flex gap-2">
-            <MoreHorizontal className="text-gray-400 hover:text-white cursor-pointer" size={20} />
             {hasProject && (
               <X className="text-gray-400 hover:text-white cursor-pointer" size={20} onClick={handleClose} />
             )}
@@ -67,10 +66,7 @@ const RightSidebar = () => {
       </div>
 
       <div className="bg-[#242424] rounded-lg p-4 mb-4 text-left">
-        <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold text-base">About the Project</h3>
-        </div>
-        <p className="text-gray-300 text-sm leading-relaxed mb-4">
+        <p className="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">
           {hasProject ? (
             (currentProject?.description) || (
               <>This project currently has no description provided.</>
@@ -88,15 +84,25 @@ const RightSidebar = () => {
       </div>
 
        <div className="bg-[#242424] rounded-lg p-4 text-left">
-          <h3 className="font-bold text-base mb-3">Credits</h3>
+         <h3 className="font-bold text-base mb-3">Credits</h3>
+         {hasProject && currentProject?.github ? (
           <div className="flex justify-between items-center text-sm mb-2">
-             <span className="text-gray-300">Role</span>
-             <span className="text-white font-medium">{hasProject ? 'Lead Developer' : '—'}</span>
+            <span className="text-gray-300">Source</span>
+            <a href={currentProject.github} target="_blank" rel="noopener noreferrer" className="text-green-500 font-medium hover:underline">Github</a>
           </div>
-          <div className="flex justify-between items-center text-sm">
-             <span className="text-gray-300">Year</span>
-             <span className="text-white font-medium">{hasProject ? (currentProject?.year || '—') : '—'}</span>
+         ) : null}
+
+         {hasProject && currentProject?.website ? (
+          <div className="flex justify-between items-center text-sm mb-2">
+            <span className="text-gray-300">Visit</span>
+            <a href={currentProject.website} target="_blank" rel="noopener noreferrer" className="text-green-500 font-medium hover:underline">Website</a>
           </div>
+         ) : null}
+
+         <div className="flex justify-between items-center text-sm">
+           <span className="text-gray-300">Year</span>
+           <span className="text-white font-medium">{hasProject ? (currentProject?.year || '—') : '—'}</span>
+         </div>
        </div>
     </div>
   );

@@ -47,10 +47,11 @@ const ImageGalleryModal = ({ isOpen, images, currentImageIndex, onClose, onPrev,
         className="max-w-[90vw] max-h-[85vh] flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
-        <img 
+        <img
           src={imageUrl}
           alt={`Gallery image ${currentImageIndex + 1}`}
-          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+          className="max-w-full max-h-full rounded-lg shadow-2xl"
+          style={{ objectFit: 'contain', objectPosition: 'center 45%' }}
         />
         
         {/* Image Counter */}
