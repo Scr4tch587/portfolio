@@ -22,6 +22,7 @@ import wispLogo from '../assets/wisplogo.png';
 import waypostLogo from '../assets/waypostlogo.png';
 import squareLogo from '../assets/square_logo.png';
 import rootifyLogo from '../assets/rootify_logo.png';
+import reelJobsLogo from '../assets/reeljobs.png';
 import projectPeriodicLogo from '../assets/project_periodic.png';
 import kaisMusicBlogLogo from '../assets/kais_music_blog.png';
 import { db } from '../firebase';
@@ -36,10 +37,11 @@ const initialAlbums = [
 ];  
 
 const initialSingles = [
-  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description: 'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy \n\n 2nd place at Newhacks 2025', tags: ['FastAPI', 'React', 'Firebase', 'Cloudinary'], orderingPriority: 1, github: 'https://github.com/Scr4tch587/waypost', website: '' },
-  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you’re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
-  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
-  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 3, github: '', website: 'https://kaizhang.substack.com/' },
+  { id: 203, title: 'ReelJobs', year: 2026, type: 'Single', image: reelJobsLogo, duration: '5:06', description: 'Instagram reels inspired app where users scroll job postings presented as short-form videos and can apply in one tap.  \n\n 3rd place at Deltahacks 12', tags: ['FastAPI', 'React Native', 'MongoDB Atlas', 'Gemini', 'Playwright'], orderingPriority: 1, github: 'https://github.com/Scr4tch587/DeltaHacks12', website: '' },
+  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description: 'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy. \n\n 2nd place at Newhacks 2025', tags: ['FastAPI', 'React', 'Firebase', 'Cloudinary'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/waypost', website: '' },
+  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you’re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
+  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies.', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
+  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 4, github: '', website: 'https://kaizhang.substack.com/' },
 ];
 
 const Home = () => {
