@@ -25,6 +25,8 @@ import rootifyLogo from '../assets/rootify_logo.png';
 import reelJobsLogo from '../assets/reeljobs.png';
 import projectPeriodicLogo from '../assets/project_periodic.png';
 import kaisMusicBlogLogo from '../assets/kais_music_blog.png';
+import sewebring from '../assets/sewebring.svg';
+import SewringMenu from '../components/SewringMenu';
 import { db } from '../firebase';
 import { collection, getDocs, doc, setDoc, increment } from "firebase/firestore";
 
@@ -51,9 +53,11 @@ const Home = () => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSocialsMenuOpen, setIsSocialsMenuOpen] = useState(false);
+  const [isSewringOpen, setIsSewringOpen] = useState(false);
   const [popularLimit, setPopularLimit] = useState(5);
   const [animatedProjectId, setAnimatedProjectId] = useState(null); // New state for animation
   const followButtonRef = useRef(null);
+  const sewebringButtonRef = useRef(null);
 
   // Stream tracking for currently playing project
   const streamTracker = useStreamTracker(currentProject?.id);
@@ -236,6 +240,25 @@ const Home = () => {
                     >
                       <FileText className="w-4 h-4" />
                     </SecondaryCapsuleButton>
+
+                    {/* SE Webring capsule (matches SecondaryCapsuleButton sizing/spacing) */}
+                    <div className="relative">
+                      <button
+                        ref={sewebringButtonRef}
+                        onClick={() => setIsSewringOpen(prev => !prev)}
+                        aria-label="SE Webring"
+                        className="capsule inline-flex items-center justify-center min-w-[44px] min-h-[56px] px-3 py-3 rounded-md border border-[#2a2a2a] bg-[#181818] text-gray-200 hover:bg-[#222] active:scale-95 focus:outline-none transition-all duration-150"
+                      >
+                        <span className="capsule-icon w-6 h-6 flex items-center justify-center transform transition-transform duration-150">
+                          <img src={sewebring} alt="SE Webring" className="w-4 h-4" />
+                        </span>
+                      </button>
+                      <SewringMenu
+                        isOpen={isSewringOpen}
+                        onClose={() => setIsSewringOpen(false)}
+                        anchorRef={sewebringButtonRef}
+                      />
+                    </div>
                   </div>
                 </div>
                 <button 
