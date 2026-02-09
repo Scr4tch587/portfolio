@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, MoreHorizontal, Heart, Pause, FileText } from 'lucide-react';
+import { Play, MoreHorizontal, Heart, Pause, FileText, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import SecondaryCapsuleButton from '../components/SecondaryCapsuleButton';
 import LikeButton from '../components/LikeButton';
 import { usePlayer } from '../context/PlayerContext';
@@ -25,6 +25,8 @@ import rootifyLogo from '../assets/rootify_logo.png';
 import reelJobsLogo from '../assets/reeljobs.png';
 import projectPeriodicLogo from '../assets/project_periodic.png';
 import kaisMusicBlogLogo from '../assets/kais_music_blog.png';
+import watAiLogo from '../assets/wat_ai_logo.jpeg';
+import docbotLogo from '../assets/docbot.png';
 import sewebring from '../assets/sewebring.svg';
 import SewringMenu from '../components/SewringMenu';
 import { db } from '../firebase';
@@ -33,23 +35,29 @@ import { collection, getDocs, doc, setDoc, increment } from "firebase/firestore"
 const initialProjects = [];
 
 const initialAlbums = [
-  { id: 1, title: 'UW Orbital', year: 2025, type: 'Album', image: orbitalLogo, duration: '3:45', description: 'University of Waterloo satellite design team competing in the Canadian Satellite Design Challenge, building a launch-ready 3U CubeSat.\n\n As a full stack developer for the ground station, I improve how mission data is displayed and managed.', tags: ['FastAPI', 'React', 'PostgreSQL'], orderingPriority: 1, github: 'https://github.com/UWOrbital/OBC-firmware', website: 'https://www.uworbital.com/' },
-  { id: 103, title: 'Wisp', year: 2025, type: 'Album', image: wispLogo, duration: '2:17', description: 'Mobile app that enables users to capture, refine, and organize ideas in under 5 seconds using only their voice through real-time AI.', tags: ['React Native', 'FastAPI', 'OpenAI API', 'MCP', 'Supabase'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/wisp', website: '' },
-  { id: 104, title: 'Rootify', year: 2025, type: 'Album', image: rootifyLogo, duration: '3:30', description: 'Evidence-first music discovery system that maps artist influences using real textual sources. \n\n Currently WIP', tags: ['spaCy', 'FastAPI', 'SQLAlchemy', 'PostgreSQL'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/Rootify-2.0', website: '' },
+  { id: 99, title: 'WAT.ai', year: 2026, type: 'Album', image: watAiLogo, duration: '8:00', description: 'ML social listening platform for vaccine research.', tags: ['Langchain', 'Web scraping', 'AWS'], orderingPriority: 1, website: 'https://watai.ca/' },
+  { id: 100, title: 'UW Orbital', year: 2025, type: 'Album', image: orbitalLogo, duration: '3:45', description: 'University of Waterloo satellite design team competing in the Canadian Satellite Design Challenge, building a launch-ready 3U CubeSat.\n\n As a full stack developer for the ground station, I improve how mission data is displayed and managed.', tags: ['FastAPI', 'React', 'PostgreSQL'], orderingPriority: 2, github: 'https://github.com/UWOrbital/OBC-firmware', website: 'https://www.uworbital.com/' },
+  { id: 103, title: 'Wisp', year: 2025, type: 'Album', image: wispLogo, duration: '2:17', description: 'Mobile app that enables users to capture, refine, and organize ideas in under 5 seconds using only their voice through real-time AI.', tags: ['React Native', 'FastAPI', 'OpenAI API', 'MCP', 'Supabase'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/wisp', website: '' },
+  { id: 104, title: 'Rootify', year: 2025, type: 'Album', image: rootifyLogo, duration: '3:30', description: 'Evidence-first music discovery system that maps artist influences using real textual sources. \n\n Currently WIP', tags: ['spaCy', 'FastAPI', 'SQLAlchemy', 'PostgreSQL'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/Rootify-2.0', website: '' },
 ];  
 
 const initialSingles = [
-  { id: 203, title: 'ReelJobs', year: 2026, type: 'Single', image: reelJobsLogo, duration: '5:06', description: 'Instagram reels inspired app where users scroll job postings presented as short-form videos and can apply in one tap.  \n\n 3rd place at Deltahacks 12', tags: ['FastAPI', 'React Native', 'MongoDB Atlas', 'Gemini', 'Playwright'], orderingPriority: 1, github: 'https://github.com/Scr4tch587/DeltaHacks12', website: '' },
-  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description: 'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy. \n\n 2nd place at Newhacks 2025', tags: ['FastAPI', 'React', 'Firebase', 'Cloudinary'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/waypost', website: '' },
-  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you’re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
-  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies.', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
-  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 4, github: '', website: 'https://kaizhang.substack.com/' },
+  { id: 202, title: 'DocBot', year: 2026, type: 'Single', image: docbotLogo, duration: '3:58', description: 'A GPS for your codebase powered by a recursive agentic AI map-reduce pipeline. \n\n Submitted to CXC 2026', tags: ['LangGraph', 'RAG', 'Tree-sitter', ], orderingPriority: 1, github: 'https://github.com/Scr4tch587/docbot'},
+  { id: 203, title: 'ReelJobs', year: 2026, type: 'Single', image: reelJobsLogo, duration: '5:06', description: 'Instagram reels inspired app where users scroll job postings presented as short-form videos and can apply in one tap.  \n\n 3rd place at Deltahacks 12', tags: ['FastAPI', 'React Native', 'MongoDB Atlas', 'Gemini', 'Playwright'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/DeltaHacks12', website: '' },
+  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description: 'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy. \n\n 2nd place at Newhacks 2025', tags: ['FastAPI', 'React', 'Firebase', 'Cloudinary'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/waypost', website: '' },
+  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you\'re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
+  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies.', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 5, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
+  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 6, github: '', website: 'https://kaizhang.substack.com/' },
 ];
 
 const Home = () => {
   const { playProject, currentProject, isPlaying, togglePlay, streamCompleteTrigger } = usePlayer();
   const { toggleLike, isLiked } = usePlayer();
   const [discographyFilter, setDiscographyFilter] = useState('albums');
+  const [showAllDiscography, setShowAllDiscography] = useState(false);
+  const [showAllFilter, setShowAllFilter] = useState('all');
+  const [showAllDropdownOpen, setShowAllDropdownOpen] = useState(false);
+  const showAllDropdownRef = useRef(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSocialsMenuOpen, setIsSocialsMenuOpen] = useState(false);
@@ -98,8 +106,9 @@ const Home = () => {
         });
 
         // Ensure all Firestore projects are included, even if not in initial local lists
+        // Only include Firestore-only projects that have essential fields (title)
         firestoreProjects.forEach(firestoreProject => {
-          if (!mergedProjects.some(mp => mp.id === firestoreProject.id)) {
+          if (!mergedProjects.some(mp => mp.id === firestoreProject.id) && firestoreProject.title) {
             mergedProjects.push(firestoreProject);
           }
         });
@@ -154,6 +163,30 @@ const Home = () => {
   const filteredDiscography = (discographyFilter === 'albums' ? initialAlbums : initialSingles)
     .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
 
+  const allDiscographyItems = [...initialAlbums, ...initialSingles]
+    .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+
+  const showAllFilteredItems = showAllFilter === 'all'
+    ? allDiscographyItems
+    : showAllFilter === 'albums'
+      ? initialAlbums.sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999))
+      : initialSingles.sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+
+  const showAllFilterLabel = showAllFilter === 'all' ? 'All' : showAllFilter === 'albums' ? 'Albums' : 'Singles and EPs';
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showAllDropdownRef.current && !showAllDropdownRef.current.contains(e.target)) {
+        setShowAllDropdownOpen(false);
+      }
+    };
+    if (showAllDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showAllDropdownOpen]);
+
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
   };
@@ -171,7 +204,7 @@ const Home = () => {
   return (
     <div className="min-h-full pb-8 bg-black">
       {/* Header / Banner */}
-      <div 
+      {!showAllDiscography && <div
         className="flex flex-col justify-end p-8 h-[370px] bg-cover relative"
         style={{ backgroundImage: `url(${herobackground})`, backgroundPosition: 'center 35%' }}
       >
@@ -189,7 +222,7 @@ const Home = () => {
             <h1 className="text-5xl md:text-8xl font-black mb-6 tracking-tighter">Kai Zhang</h1>
             <p className="text-base font-medium mb-2">Software Engineering '30</p>
         </div>
-      </div>
+      </div>}
 
       {/* Main Content Area - now has a static black background by default */}
       <div className="relative pt-4 bg-black min-h-[calc(100vh - 400px - 64px)]"> {/* 400px banner height, 64px player bar if it exists. */} 
@@ -197,6 +230,7 @@ const Home = () => {
           <div className="absolute inset-x-0 top-0 h-90 bg-linear-to-b from-[#252b36] to-black"></div>
 
           <div className="relative z-10">
+              {!showAllDiscography && <>
               {/* Action Bar */}
               <div className="flex flex-wrap items-center gap-6 px-8 py-4 relative">
                 <button 
@@ -360,54 +394,137 @@ const Home = () => {
                     {popularLimit === 5 ? 'See more' : 'See less'}
                 </div>
               </div>
-              
+              </>}
+
               {/* Discography Section */}
-              <div className="px-8 mt-8">
-                <h2 className="text-2xl font-bold mb-4 text-left">Discography</h2>
-                
-                {/* Filter Tabs */}
-                <div className="flex gap-2 mb-4">
-                    <button 
-                        onClick={() => setDiscographyFilter('albums')}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'albums' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
-                    >
-                        Albums
-                    </button>
-                    <button 
-                        onClick={() => setDiscographyFilter('singles')}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'singles' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
-                    >
-                        Singles and EPs
-                    </button>
-                </div>
-
-                <div className="flex gap-4 overflow-x-auto pb-4">
-                     {filteredDiscography.map((item) => (
-                        <div 
-                            key={item.id}
-                            onClick={() => handlePlay(item)}
-                            className={`bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition-colors cursor-pointer group w-48 shrink-0 ${isCurrent(item) ? 'text-green-500' : 'text-white'}`}
-                        >
-                            <div className="w-full aspect-square bg-gray-700 mb-4 rounded-md shadow-lg relative flex items-center justify-center text-4xl font-bold text-gray-500">
-                                 {item.image ? (
-                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                                ) : (
-                                    item.title[0]
-                                )}                                 <div className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                                    <Play size={24} fill="black" className="ml-1 text-black" />
-                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2 mb-1 min-w-0">
-                              <h3 className="font-bold truncate">{item.title}</h3>
-                              <FirstStreamBadge projectId={item.id} />
-                            </div>
-                            <p className="text-sm text-gray-400 line-clamp-2">{item.year} • {item.type}</p>
+              {showAllDiscography ? (
+                /* Full-screen "Show All" Discography View */
+                <div className="px-8 mt-4 mb-20">
+                  {/* Header with back arrow and filter dropdown */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => { setShowAllDiscography(false); setShowAllDropdownOpen(false); }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 transition-colors"
+                      >
+                        <ArrowLeft size={20} className="text-white" />
+                      </button>
+                      <h2 className="text-2xl font-bold text-left">Discography</h2>
+                    </div>
+                    {/* Filter Dropdown */}
+                    <div className="relative" ref={showAllDropdownRef}>
+                      <button
+                        onClick={() => setShowAllDropdownOpen(!showAllDropdownOpen)}
+                        className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        {showAllFilterLabel}
+                        {showAllDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                      {showAllDropdownOpen && (
+                        <div className="absolute right-0 top-full mt-2 bg-[#282828] rounded-md shadow-xl py-1 z-50 min-w-[160px]">
+                          {['all', 'albums', 'singles'].map((filter) => {
+                            const label = filter === 'all' ? 'All' : filter === 'albums' ? 'Albums' : 'Singles and EPs';
+                            const isActive = showAllFilter === filter;
+                            return (
+                              <button
+                                key={filter}
+                                onClick={() => { setShowAllFilter(filter); setShowAllDropdownOpen(false); }}
+                                className="w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-white/10 transition-colors"
+                              >
+                                <span className={isActive ? 'text-green-500' : 'text-white'}>{label}</span>
+                                {isActive && <span className="text-green-500">&#10003;</span>}
+                              </button>
+                            );
+                          })}
                         </div>
-                     ))}
+                      )}
+                    </div>
+                  </div>
+                  {/* Grid of projects */}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                    {showAllFilteredItems.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handlePlay(item)}
+                        className={`p-3 rounded-lg cursor-pointer group hover:bg-[#1A1A1A] transition-colors ${isCurrent(item) ? 'text-green-500' : 'text-white'}`}
+                      >
+                        <div className="w-full aspect-square bg-gray-700 rounded-md shadow-lg relative flex items-center justify-center text-4xl font-bold text-gray-500 overflow-hidden">
+                          {item.image ? (
+                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                          ) : (
+                            item.title[0]
+                          )}
+                          <div className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            <Play size={20} fill="black" className="ml-0.5 text-black" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 min-w-0">
+                          <h3 className="font-bold text-sm truncate">{item.title}</h3>
+                          <FirstStreamBadge projectId={item.id} />
+                        </div>
+                        <p className="text-xs text-gray-400">{item.year} &bull; {item.type}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* Normal Discography Section */
+                <div className="px-8 mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-left">Discography</h2>
+                    <button
+                      onClick={() => { setShowAllFilter(discographyFilter === 'albums' ? 'albums' : 'singles'); setShowAllDiscography(true); }}
+                      className="text-sm font-bold text-gray-400 hover:text-white transition-colors"
+                    >
+                      Show all
+                    </button>
+                  </div>
 
-              {/* About Section */}
+                  {/* Filter Tabs */}
+                  <div className="flex gap-2 mb-4">
+                      <button
+                          onClick={() => setDiscographyFilter('albums')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'albums' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
+                      >
+                          Albums
+                      </button>
+                      <button
+                          onClick={() => setDiscographyFilter('singles')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'singles' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
+                      >
+                          Singles and EPs
+                      </button>
+                  </div>
+
+                  <div className="flex gap-4 overflow-hidden pb-4">
+                       {filteredDiscography.map((item) => (
+                          <div
+                              key={item.id}
+                              onClick={() => handlePlay(item)}
+                              className={`bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition-colors cursor-pointer group w-48 shrink-0 ${isCurrent(item) ? 'text-green-500' : 'text-white'}`}
+                          >
+                              <div className="w-full aspect-square bg-gray-700 mb-4 rounded-md shadow-lg relative flex items-center justify-center text-4xl font-bold text-gray-500">
+                                   {item.image ? (
+                                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                                  ) : (
+                                      item.title[0]
+                                  )}                                 <div className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                                      <Play size={24} fill="black" className="ml-1 text-black" />
+                                   </div>
+                              </div>
+                              <div className="flex items-center gap-2 mb-1 min-w-0">
+                                <h3 className="font-bold truncate">{item.title}</h3>
+                                <FirstStreamBadge projectId={item.id} />
+                              </div>
+                              <p className="text-sm text-gray-400 line-clamp-2">{item.year} • {item.type}</p>
+                          </div>
+                       ))}
+                  </div>
+                </div>
+              )}
+
+              {!showAllDiscography &&
+              /* About Section */
               <div className="px-8 mt-8 mb-20">
                 <h2 className="text-2xl font-bold mb-4 text-left">About</h2>
                 <div 
@@ -425,7 +542,7 @@ const Home = () => {
                         </p>
                     </div>
                 </div>
-              </div>
+              </div>}
           </div>
       </div>
 
