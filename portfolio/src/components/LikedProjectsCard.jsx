@@ -3,10 +3,15 @@ import { usePlayer } from '../context/PlayerContext';
 import profileImage from '../assets/profilephoto1.jpg';
 
 const LikedProjectsCard = () => {
-  const { likedCount } = usePlayer();
+  const { likedCount, openLikedSongs } = usePlayer();
 
   return (
-    <div className="flex flex-col">
+    <button
+      type="button"
+      onClick={openLikedSongs}
+      className="flex flex-col text-left cursor-pointer hover:opacity-90 transition-opacity"
+      aria-label="Open liked songs"
+    >
       <span className="text-xl font-bold text-white mb-3">Liked Songs</span>
 
       <div className="flex items-center gap-6">
@@ -27,7 +32,7 @@ const LikedProjectsCard = () => {
           <span className="text-sm text-gray-400">By Kai Zhang</span>
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 

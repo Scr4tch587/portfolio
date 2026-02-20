@@ -1,27 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Mic2, LayoutList, Volume2, Maximize2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
 const PlayerBar = () => {
-  const { currentProject, isPlaying, togglePlay, currentTime, durationSeconds, toggleLike, isLiked } = usePlayer();
-
-  const [visible, setVisible] = useState(!!currentProject);
-  const [animState, setAnimState] = useState(currentProject ? 'enter' : 'exit');
-  const EXIT_MS = 220;
-
-  useEffect(() => {
-    if (currentProject) {
-      setVisible(true);
-      setAnimState('enter');
-    } else if (visible) {
-      setAnimState('exit');
-      const t = setTimeout(() => setVisible(false), EXIT_MS + 20);
-      return () => clearTimeout(t);
-    }
-  }, [currentProject]);
-
-  if (!visible) return null;
+  const {
+    currentProject,
+    isPlaying,
+    togglePlay,
+    currentTime,
+    durationSeconds,
+    toggleLike,
+    isLiked,
+    isShuffleOn,
+    toggleShuffle,
+    playNextProject,
+    playPreviousProject,
+  } = usePlayer();
+  if (!currentProject) return null;
 
   const formatTime = (seconds) => {
     const roundedSeconds = Math.round(seconds);
@@ -32,24 +28,22 @@ const PlayerBar = () => {
 
   const progressPercentage = durationSeconds > 0 ? (currentTime / durationSeconds) * 100 : 0;
   const title = currentProject?.title || '';
-  const artist = currentProject?.artist || 'You';
+  const artist = currentProject?.artist || 'Kai Zhang';
 
-    const containerClass = animState === 'enter' ? 'animate-fade-in-up' : 'animate-fade-out-down';
-
-    return (
-      <div className={`h-24 bg-black border-t border-[#282828] px-4 flex items-center justify-between fixed bottom-0 w-full z-50 text-white ${containerClass}`}>
+  return (
+    <div className="h-[92px] bg-black border-t border-[#282828] px-4 md:px-5 flex items-center justify-between fixed bottom-0 w-full z-50 text-white animate-fade-in-up">
       
       {/* Left: Project Info */}
-      <div className="flex items-center gap-4 w-[30%] min-w-[180px]">
-        <div className="w-14 h-14 bg-gray-700 rounded flex items-center justify-center shrink-0 overflow-hidden">
+      <div className="flex items-center gap-3 w-[30%] min-w-[180px]">
+        <div className="w-14 h-14 bg-gray-700 rounded-[4px] flex items-center justify-center shrink-0 overflow-hidden">
              {currentProject?.image ? (
                <img src={currentProject?.image} alt={title} className="w-full h-full object-cover" />
              ) : (
                <span className="font-bold text-sm">{title ? title[0] : ''}</span>
              )}        </div>
         <div className="flex flex-col overflow-hidden">
-          <span className="font-medium text-sm hover:underline cursor-pointer truncate">{title}</span>
-          <span className="text-xs text-gray-400 hover:underline cursor-pointer hover:text-white transition-colors truncate">
+          <span className="font-medium text-[14px] hover:underline cursor-pointer truncate">{title}</span>
+          <span className="text-[12px] text-gray-400 hover:underline cursor-pointer hover:text-white transition-colors truncate">
             {artist}
           </span>
         </div>
@@ -64,13 +58,17 @@ const PlayerBar = () => {
       </div>
 
       {/* Center: Controls */}
-      <div className="flex flex-col items-center max-w-[40%] w-full gap-2">
-        <div className="flex items-center gap-6">
-          <Shuffle size={16} className="text-gray-400 hover:text-white cursor-pointer" />
-          <SkipBack size={20} className="text-gray-400 hover:text-white cursor-pointer" fill="currentColor" />
+      <div className="flex flex-col items-center max-w-[40%] w-full gap-1.5">
+        <div className="flex items-center gap-5">
+          <button type="button" onClick={toggleShuffle} aria-label={isShuffleOn ? 'Disable shuffle' : 'Enable shuffle'}>
+            <Shuffle size={16} className={`${isShuffleOn ? 'text-green-500' : 'text-gray-400'} hover:text-white cursor-pointer`} />
+          </button>
+          <button type="button" onClick={playPreviousProject} aria-label="Previous project">
+            <SkipBack size={18} className="text-gray-400 hover:text-white cursor-pointer" fill="currentColor" />
+          </button>
           
           <button 
-            className={`w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform active:scale-95 focus:outline-none`}
+            className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform active:scale-95 focus:outline-none"
             onClick={togglePlay}
           >
             {isPlaying ? (
@@ -80,9 +78,10 @@ const PlayerBar = () => {
             )}
           </button>
           
-          <SkipForward size={20} className="text-gray-400 hover:text-white cursor-pointer" fill="currentColor" />
+          <button type="button" onClick={playNextProject} aria-label="Next project">
+            <SkipForward size={18} className="text-gray-400 hover:text-white cursor-pointer" fill="currentColor" />
+          </button>
           
-          {/* Repeat Button with Spotify-like styling for 'Repeat One' */}
           <div className="relative flex items-center justify-center">
             <Repeat size={16} className="text-green-500 cursor-pointer" />
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
@@ -91,20 +90,19 @@ const PlayerBar = () => {
 
         </div>
         
-        {/* Progress Bar Mockup */}
-        <div className="w-full flex items-center gap-2 text-xs text-gray-400 font-medium">
-          <span>{formatTime(currentTime)}</span>
+        <div className="w-full flex items-center gap-2 text-[11px] text-gray-400 font-medium">
+          <span className="tabular-nums">{formatTime(currentTime)}</span>
           <div className="h-1 bg-[#4d4d4d] rounded-full flex-1 group cursor-pointer">
              <div className="h-full bg-white rounded-full group-hover:bg-green-500 relative" style={{ width: `${progressPercentage}%` }}>
                 <div className="hidden group-hover:block absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow"></div>
              </div>
           </div>
-          <span>{currentProject?.duration || '3:45'}</span>
+          <span className="tabular-nums">{currentProject?.duration || '3:45'}</span>
         </div>
       </div>
 
       {/* Right: Volume & Extras */}
-      <div className="flex items-center justify-end gap-3 w-[30%] min-w-[180px] text-gray-400">
+      <div className="hidden md:flex items-center justify-end gap-3 w-[30%] min-w-[180px] text-gray-400">
          <Mic2 size={16} className="hover:text-white cursor-pointer" />
          <LayoutList size={16} className="hover:text-white cursor-pointer" />
          <div className="flex items-center gap-2 group">

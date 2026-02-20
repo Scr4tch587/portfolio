@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, MoreHorizontal, Heart, Pause, FileText, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, MoreHorizontal, Heart, Pause, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import SecondaryCapsuleButton from '../components/SecondaryCapsuleButton';
 import LikeButton from '../components/LikeButton';
 import { usePlayer } from '../context/PlayerContext';
@@ -19,6 +19,7 @@ import herobackground from '../assets/herobackground.jpg';
 import waterlooCrest from '../assets/waterloo_logo.webp';
 import orbitalLogo from '../assets/orbitallogo.png';
 import wispLogo from '../assets/wisplogo.png';
+import superLogo from '../assets/superlogo.jpeg';
 import waypostLogo from '../assets/waypostlogo.png';
 import squareLogo from '../assets/square_logo.png';
 import rootifyLogo from '../assets/rootify_logo.png';
@@ -30,29 +31,42 @@ import docbotLogo from '../assets/docbot.png';
 import sewebring from '../assets/sewebring.svg';
 import SewringMenu from '../components/SewringMenu';
 import { db } from '../firebase';
-import { collection, getDocs, doc, setDoc, increment } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, increment, serverTimestamp, query, where, Timestamp, getCountFromServer } from "firebase/firestore";
 
 const initialProjects = [];
 
 const initialAlbums = [
-  { id: 99, title: 'WAT.ai', year: 2026, type: 'Album', image: watAiLogo, duration: '8:00', description: 'ML social listening platform for vaccine research.', tags: ['Langchain', 'Web scraping', 'AWS'], orderingPriority: 1, website: 'https://watai.ca/' },
-  { id: 100, title: 'UW Orbital', year: 2025, type: 'Album', image: orbitalLogo, duration: '3:45', description: 'University of Waterloo satellite design team competing in the Canadian Satellite Design Challenge, building a launch-ready 3U CubeSat.\n\n As a full stack developer for the ground station, I improve how mission data is displayed and managed.', tags: ['FastAPI', 'React', 'PostgreSQL'], orderingPriority: 2, github: 'https://github.com/UWOrbital/OBC-firmware', website: 'https://www.uworbital.com/' },
-  { id: 103, title: 'Wisp', year: 2025, type: 'Album', image: wispLogo, duration: '2:17', description: 'Mobile app that enables users to capture, refine, and organize ideas in under 5 seconds using only their voice through real-time AI.', tags: ['React Native', 'FastAPI', 'OpenAI API', 'MCP', 'Supabase'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/wisp', website: '' },
-  { id: 104, title: 'Rootify', year: 2025, type: 'Album', image: rootifyLogo, duration: '3:30', description: 'Evidence-first music discovery system that maps artist influences using real textual sources. \n\n Currently WIP', tags: ['spaCy', 'FastAPI', 'SQLAlchemy', 'PostgreSQL'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/Rootify-2.0', website: '' },
+  { id: 98, title: 'Super.com', year: 2026, type: 'Album', image: superLogo, duration: '3:30', description: 'Incoming SWE Intern Summer 2026', tags: ['Python', 'Node', 'React', 'AWS', 'PostgreSQL'], orderingPriority: 1, website: 'https://www.super.com/home' },
+  { id: 99, title: 'WAT.ai', year: 2026, type: 'Album', image: watAiLogo, duration: '8:00', description: 'ML social listening platform for vaccine research.', tags: ['Langchain', 'Web scraping', 'AWS'], orderingPriority: 2, website: 'https://watai.ca/' },
+  { id: 100, title: 'UW Orbital', year: 2025, type: 'Album', image: orbitalLogo, duration: '3:45', description: 'University of Waterloo satellite design team competing in the Canadian Satellite Design Challenge, building a launch-ready 3U CubeSat.\n\n As a full stack developer for the ground station, I improve how mission data is displayed and managed.', tags: ['FastAPI', 'React', 'PostgreSQL'], orderingPriority: 3, github: 'https://github.com/UWOrbital/OBC-firmware', website: 'https://www.uworbital.com/' },
 ];  
 
 const initialSingles = [
-  { id: 202, title: 'DocBot', year: 2026, type: 'Single', image: docbotLogo, duration: '3:58', description: 'A GPS for your codebase powered by a recursive agentic AI map-reduce pipeline. \n\n Submitted to CXC 2026', tags: ['LangGraph', 'RAG', 'Tree-sitter', ], orderingPriority: 1, github: 'https://github.com/Scr4tch587/docbot'},
-  { id: 203, title: 'ReelJobs', year: 2026, type: 'Single', image: reelJobsLogo, duration: '5:06', description: 'Instagram reels inspired app where users scroll job postings presented as short-form videos and can apply in one tap.  \n\n 3rd place at Deltahacks 12', tags: ['FastAPI', 'React Native', 'MongoDB Atlas', 'Gemini', 'Playwright'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/DeltaHacks12', website: '' },
-  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description: 'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy. \n\n 2nd place at Newhacks 2025', tags: ['FastAPI', 'React', 'Firebase', 'Cloudinary'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/waypost', website: '' },
-  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you\'re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
-  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies.', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 5, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
-  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 6, github: '', website: 'https://kaizhang.substack.com/' },
+  { id: 202, title: 'DocBot', year: 2026, type: 'Single', image: docbotLogo, duration: '3:58', description: 'A GPS for your codebase powered by a recursive agentic AI map-reduce pipeline. \n\n Submitted to CXC 2026', tags: ['LangGraph', 'RAG', 'Tree-sitter', ], orderingPriority: 1, github: 'https://github.com/Scr4tch587/docbot', website: 'https://devpost.com/software/work-in-progress-tkjln5' },
+  { id: 203, title: 'ReelJobs', year: 2026, type: 'Single', image: reelJobsLogo, duration: '5:06', description: 'Instagram reels inspired app where users scroll job postings presented as short-form videos and can apply in one tap.  \n\n 3rd place at Deltahacks 12', tags: ['FastAPI', 'React Native', 'MongoDB Atlas', 'Gemini', 'Playwright'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/DeltaHacks12', website: 'https://devpost.com/software/reeljobs' },
+  { id: 104, title: 'Rootify', year: 2025, type: 'EP', image: rootifyLogo, duration: '3:30', description: 'Evidence-first music discovery system that maps artist influences using real textual sources. \n\n Currently WIP', tags: ['spaCy', 'FastAPI', 'SQLAlchemy', 'PostgreSQL'], orderingPriority: 3, github: 'https://github.com/Scr4tch587/Rootify-2.0', website: '' },
+  { id: 103, title: 'Wisp', year: 2025, type: 'EP', image: wispLogo, duration: '2:17', description: 'Mobile app that enables users to capture, refine, and organize ideas in under 5 seconds using only their voice through real-time AI.', tags: ['React Native', 'FastAPI', 'OpenAI API', 'MCP', 'Supabase'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/wisp', website: '' },
+  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description: 'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy. \n\n 2nd place at Newhacks 2025', tags: ['FastAPI', 'React', 'Firebase', 'Cloudinary'], orderingPriority: 5, github: 'https://github.com/Scr4tch587/waypost', website: 'https://devpost.com/software/hi-team' },
+  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you\'re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 6, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
+  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies.', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 7, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
+  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 8, github: '', website: 'https://kaizhang.substack.com/' },
 ];
 
 const Home = () => {
-  const { playProject, currentProject, isPlaying, togglePlay, streamCompleteTrigger } = usePlayer();
-  const { toggleLike, isLiked } = usePlayer();
+  const {
+    playProject,
+    currentProject,
+    isPlaying,
+    togglePlay,
+    streamCompleteTrigger,
+    toggleLike,
+    isLiked,
+    setAllProjectsList,
+    setIsPlaying,
+    discographyOpenAllTrigger,
+    rightSidebarOpen,
+    homeNavigationTrigger,
+  } = usePlayer();
   const [discographyFilter, setDiscographyFilter] = useState('albums');
   const [showAllDiscography, setShowAllDiscography] = useState(false);
   const [showAllFilter, setShowAllFilter] = useState('all');
@@ -64,8 +78,10 @@ const Home = () => {
   const [isSewringOpen, setIsSewringOpen] = useState(false);
   const [popularLimit, setPopularLimit] = useState(5);
   const [animatedProjectId, setAnimatedProjectId] = useState(null); // New state for animation
+  const [visibleDiscographyCount, setVisibleDiscographyCount] = useState(null);
   const followButtonRef = useRef(null);
   const sewebringButtonRef = useRef(null);
+  const discographyRowRef = useRef(null);
 
   // Stream tracking for currently playing project
   const streamTracker = useStreamTracker(currentProject?.id);
@@ -77,6 +93,8 @@ const Home = () => {
   // Combine all project types for view tracking
   const [allProjects, setAllProjects] = useState([]); // Initialize as empty array
   const [firestoreInitialized, setFirestoreInitialized] = useState(false);
+  const hasAutoSelected = useRef(false);
+  const [monthlyVisitorCount, setMonthlyVisitorCount] = useState(0);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -114,6 +132,7 @@ const Home = () => {
         });
 
         setAllProjects(mergedProjects);
+        setAllProjectsList(mergedProjects);
         setFirestoreInitialized(true);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -121,7 +140,18 @@ const Home = () => {
     };
 
     fetchProjects();
-  }, []); // Run once on component mount
+  }, [setAllProjectsList]); // Run once on component mount
+
+  useEffect(() => {
+    if (!firestoreInitialized || allProjects.length === 0 || currentProject || hasAutoSelected.current) {
+      return;
+    }
+
+    hasAutoSelected.current = true;
+    const randomIndex = Math.floor(Math.random() * allProjects.length);
+    playProject(allProjects[randomIndex], { openSidebar: false });
+    setIsPlaying(false);
+  }, [allProjects, currentProject, firestoreInitialized, playProject, setIsPlaying]);
 
   useEffect(() => {
     if (streamCompleteTrigger > 0 && currentProject && firestoreInitialized) {
@@ -145,6 +175,84 @@ const Home = () => {
     }
   }, [streamCompleteTrigger, currentProject, firestoreInitialized]);
 
+  useEffect(() => {
+    const trackAndCountMonthlyVisitors = async () => {
+      try {
+        // Prevent double-counting in React StrictMode while still counting each hard refresh.
+        const pageLoadKey = `visit-tracked-${Math.floor(performance.timeOrigin)}`;
+        const alreadyTrackedThisLoad = sessionStorage.getItem(pageLoadKey) === '1';
+
+        if (!alreadyTrackedThisLoad) {
+          // Mark first to prevent duplicate writes during React StrictMode double-invocation.
+          sessionStorage.setItem(pageLoadKey, '1');
+          const visitDocId = `visit-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+          await setDoc(doc(db, 'visitors', visitDocId), { lastSeen: serverTimestamp() });
+        }
+
+        const cutoff = Timestamp.fromMillis(Date.now() - (30 * 24 * 60 * 60 * 1000));
+        const monthlyVisitsQuery = query(
+          collection(db, 'visitors'),
+          where('lastSeen', '>=', cutoff),
+        );
+        const countSnapshot = await getCountFromServer(monthlyVisitsQuery);
+        setMonthlyVisitorCount(countSnapshot.data().count || 0);
+      } catch (error) {
+        console.error('Error tracking monthly visitors:', error);
+      }
+    };
+
+    trackAndCountMonthlyVisitors();
+  }, []);
+
+  useEffect(() => {
+    if (discographyOpenAllTrigger === 0) return;
+    setShowAllFilter('all');
+    setShowAllDropdownOpen(false);
+    setShowAllDiscography(true);
+  }, [discographyOpenAllTrigger]);
+
+  useEffect(() => {
+    if (homeNavigationTrigger === 0) return;
+    setShowAllDiscography(false);
+    setShowAllDropdownOpen(false);
+    setShowAllFilter('all');
+  }, [homeNavigationTrigger]);
+
+  useEffect(() => {
+    if (!showAllDiscography) return undefined;
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setShowAllDiscography(false);
+        setShowAllDropdownOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showAllDiscography]);
+
+  useEffect(() => {
+    const row = discographyRowRef.current;
+    if (!row) return undefined;
+
+    const CARD_WIDTH = 192; // w-48
+    const CARD_GAP = 16; // gap-4
+    const updateVisibleCount = () => {
+      const rowWidth = row.clientWidth || 0;
+      const fullCards = Math.floor((rowWidth + CARD_GAP) / (CARD_WIDTH + CARD_GAP));
+      setVisibleDiscographyCount(Math.max(1, fullCards));
+    };
+
+    updateVisibleCount();
+    const resizeObserver = new ResizeObserver(updateVisibleCount);
+    resizeObserver.observe(row);
+    window.addEventListener('resize', updateVisibleCount);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateVisibleCount);
+    };
+  }, [rightSidebarOpen]);
+
   const handlePlay = (projectToPlay) => {
     if (currentProject?.id === projectToPlay.id) {
         togglePlay();
@@ -162,6 +270,9 @@ const Home = () => {
 
   const filteredDiscography = (discographyFilter === 'albums' ? initialAlbums : initialSingles)
     .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+  const visibleDiscography = rightSidebarOpen && visibleDiscographyCount
+    ? filteredDiscography.slice(0, visibleDiscographyCount)
+    : filteredDiscography;
 
   const allDiscographyItems = [...initialAlbums, ...initialSingles]
     .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
@@ -265,16 +376,6 @@ const Home = () => {
                       </svg>
                     </SecondaryCapsuleButton>
 
-                    <SecondaryCapsuleButton
-                      href="/kzhangresume.pdf"
-                      ariaLabel="Resume"
-                      tooltip="Download resume"
-                      newTab={false}
-                      download="kzhangresume.pdf"
-                    >
-                      <FileText className="w-4 h-4" />
-                    </SecondaryCapsuleButton>
-
                     {/* SE Webring capsule (matches SecondaryCapsuleButton sizing/spacing) */}
                     <div className="relative group">
                       <button
@@ -317,9 +418,9 @@ const Home = () => {
                 <div className={currentProject ? 'w-full flex flex-col gap-4 mt-4' : 'ml-auto mr-8'}>
                   <div className={`flex ${currentProject ? 'flex-row items-start gap-20' : 'items-start gap-32'}`}>
                     <LikedProjectsCard />
-                    {/* pass the Wisp project (use initialAlbums default) */}
+                    {/* pass the Super.com project */}
                     <div className="mr-16">
-                      <ArtistPickCard project={initialAlbums.find(a => a.id === 103)} />
+                      <ArtistPickCard project={initialAlbums.find(a => a.id === 98)} descriptor="summer 26 coop" />
                     </div>
                   </div>
                 </div>
@@ -496,8 +597,8 @@ const Home = () => {
                       </button>
                   </div>
 
-                  <div className="flex gap-4 overflow-hidden pb-4">
-                       {filteredDiscography.map((item) => (
+                  <div ref={discographyRowRef} className="flex gap-4 overflow-hidden pb-4">
+                       {visibleDiscography.map((item) => (
                           <div
                               key={item.id}
                               onClick={() => handlePlay(item)}
@@ -535,10 +636,10 @@ const Home = () => {
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors"></div>
                     <div className="absolute bottom-8 left-8 z-10">
                         <p className="text-white text-base font-bold">
-                          0 monthly listeners
+                          {monthlyVisitorCount.toLocaleString()} monthly visitors
                         </p>
                         <p className="text-white text-base line-clamp-3 max-w-2xl">
-                            vancouver -&gt; waterloo. seeking summer 2026 internships. thanks for stopping by!
+                            vancouver -&gt; waterloo. thanks for stopping by!
                         </p>
                     </div>
                 </div>
