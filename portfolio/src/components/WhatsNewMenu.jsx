@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Play, X } from 'lucide-react';
 import superLogo from '../assets/superlogo.jpeg';
+import dailyLogo from '../assets/logo.svg';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
-const SUPER_RELEASE_DATE = new Date('2026-02-20T00:00:00Z');
+const RELEASE_DATE_BY_ID = {
+  98: new Date('2026-02-20T00:00:00Z'), // Super.com
+  201: new Date('2026-02-24T00:00:00Z'), // The Daily
+};
 
 const getRelativeLabelFromRelease = (releaseDate) => {
   const now = new Date();
@@ -33,12 +37,31 @@ const STATIC_SUPER_ITEM = {
   artist: 'Kai Zhang',
   type: 'Album',
   image: superLogo,
-  ageLabel: getRelativeLabelFromRelease(SUPER_RELEASE_DATE),
+};
+
+const STATIC_DAILY_ITEM = {
+  id: 201,
+  title: 'The Daily',
+  artist: 'Kai Zhang',
+  type: 'Single',
+  image: dailyLogo,
+};
+
+const getReleaseDateForProject = (project) => {
+  if (project?.id && RELEASE_DATE_BY_ID[project.id]) {
+    return RELEASE_DATE_BY_ID[project.id];
+  }
+
+  if (project?.year) {
+    return new Date(`${project.year}-01-01T00:00:00Z`);
+  }
+
+  return new Date();
 };
 
 const WhatsNewMenu = () => {
   const { whatsNewOpen, closeWhatsNew, playProject, allProjectsList, toggleLike, isLiked } = usePlayer();
-  const [filter, setFilter] = useState('albums');
+  const [filter, setFilter] = useState('all');
 
   const handlePlayFromMenu = (project) => {
     playProject(project);
@@ -47,6 +70,7 @@ const WhatsNewMenu = () => {
 
   useEffect(() => {
     if (!whatsNewOpen) return undefined;
+    setFilter('all');
 
     const handleEscape = (event) => {
       if (event.key === 'Escape') closeWhatsNew();
@@ -57,21 +81,32 @@ const WhatsNewMenu = () => {
   }, [whatsNewOpen, closeWhatsNew]);
 
   const items = useMemo(() => {
-    const superProject = allProjectsList.find((project) => project.id === 98 || project.title?.toLowerCase() === 'super.com');
-    const project = superProject || STATIC_SUPER_ITEM;
-    const normalized = {
-      id: project.id,
-      title: project.title || 'Super.com',
-      artist: 'Kai Zhang',
-      type: project.type || 'Album',
-      image: project.image || superLogo,
-      ageLabel: getRelativeLabelFromRelease(SUPER_RELEASE_DATE),
-      source: project,
+    const idsToShow = [201, 98];
+    const fallbackById = {
+      98: STATIC_SUPER_ITEM,
+      201: STATIC_DAILY_ITEM,
     };
 
-    if (filter === 'albums' && normalized.type !== 'Album') return [];
-    if (filter === 'singles' && normalized.type !== 'Single' && normalized.type !== 'EP') return [];
-    return [normalized];
+    const resolved = idsToShow.map((id) => {
+      const project = allProjectsList.find((p) => p.id === id) || fallbackById[id];
+      return {
+        id: project.id,
+        title: project.title || fallbackById[id]?.title || 'Untitled',
+        artist: 'Kai Zhang',
+        type: project.type || fallbackById[id]?.type || 'Single',
+        image: project.image || fallbackById[id]?.image || superLogo,
+        ageLabel: getRelativeLabelFromRelease(getReleaseDateForProject(project)),
+        source: project,
+      };
+    });
+
+    if (filter === 'albums') {
+      return resolved.filter((item) => item.type === 'Album');
+    }
+    if (filter === 'singles') {
+      return resolved.filter((item) => item.type === 'Single' || item.type === 'EP');
+    }
+    return resolved;
   }, [allProjectsList, filter]);
 
   if (!whatsNewOpen) return null;
