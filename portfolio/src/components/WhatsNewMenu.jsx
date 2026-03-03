@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Play, X } from 'lucide-react';
 import superLogo from '../assets/superlogo.jpeg';
 import dailyLogo from '../assets/logo.svg';
+import sonifyLogo from '../assets/sonify.png';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
@@ -29,6 +30,14 @@ const getRelativeLabelFromRelease = (releaseDate) => {
 
   const months = Math.max(1, Math.floor(days / 30));
   return diffMs >= 0 ? `${months} month${months === 1 ? '' : 's'} ago` : `in ${months} month${months === 1 ? '' : 's'}`;
+};
+
+const STATIC_SONIFY_ITEM = {
+  id: 202,
+  title: 'Sonify',
+  artist: 'Kai Zhang',
+  type: 'Single',
+  image: sonifyLogo,
 };
 
 const STATIC_SUPER_ITEM = {
@@ -81,10 +90,11 @@ const WhatsNewMenu = () => {
   }, [whatsNewOpen, closeWhatsNew]);
 
   const items = useMemo(() => {
-    const idsToShow = [201, 98];
+    const idsToShow = [200, 201, 98];
     const fallbackById = {
       98: STATIC_SUPER_ITEM,
       201: STATIC_DAILY_ITEM,
+      200: STATIC_SONIFY_ITEM,
     };
 
     const resolved = idsToShow.map((id) => {
