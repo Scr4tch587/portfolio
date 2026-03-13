@@ -331,6 +331,28 @@ export const PlayerProvider = ({ children }) => {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
+  // Keep the open/selected project in sync with Firestore-backed list updates.
+  useEffect(() => {
+    if (!currentProject || allProjectsList.length === 0) return;
+    const fresh = allProjectsList.find((project) => project.id === currentProject.id);
+    if (!fresh) return;
+
+    const fieldsChanged = (
+      fresh.title !== currentProject.title
+      || fresh.description !== currentProject.description
+      || fresh.type !== currentProject.type
+      || fresh.year !== currentProject.year
+      || fresh.image !== currentProject.image
+      || fresh.imageUrl !== currentProject.imageUrl
+      || fresh.views !== currentProject.views
+      || (fresh.tags || []).join('|') !== (currentProject.tags || []).join('|')
+    );
+
+    if (fieldsChanged) {
+      setCurrentProject((prev) => (prev && prev.id === fresh.id ? { ...fresh, liked: prev.liked } : prev));
+    }
+  }, [allProjectsList, currentProject]);
+
   useEffect(() => {
     let interval = null;
     if (isPlaying && durationSeconds > 0) {

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Bell, Download, LayoutGrid, Search, User } from 'lucide-react';
+import { Bell, LayoutGrid, Search, User } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import SearchOverlay from './SearchOverlay';
 
@@ -83,19 +83,6 @@ const TopBar = ({ scrollY }) => {
       </div>
 
       <div className="shrink-0 hidden md:flex items-center gap-7 text-gray-300">
-        <div className="relative group">
-          <a
-            href="/kzhangresume.pdf"
-            download="kzhangresume.pdf"
-            className="flex items-center gap-1.5 text-sm font-semibold hover:text-white"
-          >
-            <Download size={16} />
-            <span>Resume</span>
-          </a>
-          <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Download Resume
-          </span>
-        </div>
         <div className="relative group">
           <button
             type="button"

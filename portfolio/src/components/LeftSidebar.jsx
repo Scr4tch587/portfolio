@@ -1,10 +1,10 @@
 import React from 'react';
-import { Heart, Library, Play } from 'lucide-react';
+import { Heart, Library, Play, Volume2 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import squareLogo from '../assets/square_logo.png';
 
 const LeftSidebar = () => {
-  const { recentlyPlayed, currentProject, playProject, likedCount, openLikedSongs, openDiscographyAll, goHome } = usePlayer();
+  const { recentlyPlayed, currentProject, isPlaying, playProject, likedCount, openLikedSongs, openDiscographyAll, goHome } = usePlayer();
 
   return (
     <aside className="hidden md:flex w-[72px] bg-[#121212] rounded-lg p-2 flex-col gap-1 items-center overflow-y-auto custom-scrollbar shrink-0">
@@ -25,12 +25,13 @@ const LeftSidebar = () => {
       <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 items-center">
         {recentlyPlayed.map((project) => {
           const isActive = currentProject?.id === project.id;
+          const isActiveAndPlaying = isActive && isPlaying;
           return (
             <div key={project.id} className="relative group">
               <button
                 type="button"
                 onClick={() => playProject(project)}
-                className={`w-12 h-12 rounded overflow-hidden shrink-0 relative cursor-pointer transition-transform duration-150 hover:scale-105 ${isActive ? 'ring-2 ring-green-500/60' : 'ring-1 ring-white/10 hover:ring-white/30'}`}
+                className="w-12 h-12 rounded overflow-hidden shrink-0 relative cursor-pointer transition-transform duration-150 hover:scale-105 ring-1 ring-white/10 hover:ring-white/30"
                 aria-label={project.title}
                 title={project.title}
               >
@@ -38,8 +39,10 @@ const LeftSidebar = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors flex items-center justify-center">
                   <Play size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" fill="currentColor" />
                 </div>
-                {isActive && (
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full" />
+                {isActiveAndPlaying && (
+                  <div className="absolute inset-0 rounded bg-black/60 flex items-center justify-center">
+                    <Volume2 size={30} className="text-green-500" />
+                  </div>
                 )}
               </button>
               <div className="sidebar-tooltip pointer-events-none opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#282828] px-2 py-1 rounded text-xs text-white whitespace-nowrap z-50">

@@ -1,19 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Play, X } from 'lucide-react';
-import superLogo from '../assets/superlogo.jpeg';
-import dailyLogo from '../assets/logo.svg';
-import sonifyLogo from '../assets/sonify.png';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
-const RELEASE_DATE_BY_ID = {
-  98: new Date('2026-02-20T00:00:00Z'), // Super.com
-  201: new Date('2026-02-24T00:00:00Z'), // The Daily
-};
+// Hard reset point for "What's New": only projects created on/after this date appear.
+const WHATS_NEW_RESET_AT_MS = Date.parse('2026-03-13T00:00:00.000Z');
 
-const getRelativeLabelFromRelease = (releaseDate) => {
+function getProjectDate(project) {
+  const raw = project?.createdAt;
+  if (raw?.toDate) return raw.toDate();
+  if (raw?.seconds) return new Date(raw.seconds * 1000);
+  if (typeof raw === 'string' || typeof raw === 'number') {
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return null;
+}
+
+function getRelativeLabelFromDate(date) {
   const now = new Date();
-  const diffMs = now.getTime() - releaseDate.getTime();
+  const diffMs = now.getTime() - date.getTime();
   const absMs = Math.abs(diffMs);
   const dayMs = 24 * 60 * 60 * 1000;
   const hourMs = 60 * 60 * 1000;
@@ -30,43 +36,7 @@ const getRelativeLabelFromRelease = (releaseDate) => {
 
   const months = Math.max(1, Math.floor(days / 30));
   return diffMs >= 0 ? `${months} month${months === 1 ? '' : 's'} ago` : `in ${months} month${months === 1 ? '' : 's'}`;
-};
-
-const STATIC_SONIFY_ITEM = {
-  id: 202,
-  title: 'Sonify',
-  artist: 'Kai Zhang',
-  type: 'Single',
-  image: sonifyLogo,
-};
-
-const STATIC_SUPER_ITEM = {
-  id: 98,
-  title: 'Super.com',
-  artist: 'Kai Zhang',
-  type: 'Album',
-  image: superLogo,
-};
-
-const STATIC_DAILY_ITEM = {
-  id: 201,
-  title: 'The Daily',
-  artist: 'Kai Zhang',
-  type: 'Single',
-  image: dailyLogo,
-};
-
-const getReleaseDateForProject = (project) => {
-  if (project?.id && RELEASE_DATE_BY_ID[project.id]) {
-    return RELEASE_DATE_BY_ID[project.id];
-  }
-
-  if (project?.year) {
-    return new Date(`${project.year}-01-01T00:00:00Z`);
-  }
-
-  return new Date();
-};
+}
 
 const WhatsNewMenu = () => {
   const { whatsNewOpen, closeWhatsNew, playProject, allProjectsList, toggleLike, isLiked } = usePlayer();
@@ -90,33 +60,44 @@ const WhatsNewMenu = () => {
   }, [whatsNewOpen, closeWhatsNew]);
 
   const items = useMemo(() => {
-    const idsToShow = [200, 201, 98];
-    const fallbackById = {
-      98: STATIC_SUPER_ITEM,
-      201: STATIC_DAILY_ITEM,
-      200: STATIC_SONIFY_ITEM,
-    };
-
-    const resolved = idsToShow.map((id) => {
-      const project = allProjectsList.find((p) => p.id === id) || fallbackById[id];
-      return {
+    const latest = [...allProjectsList]
+      .map((project) => ({
+        project,
+        createdAtDate: getProjectDate(project),
+      }))
+      .filter(({ project, createdAtDate }) => (
+        project?.title
+        && createdAtDate
+        && createdAtDate.getTime() >= WHATS_NEW_RESET_AT_MS
+      ))
+      .sort((a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
+      .slice(0, 8)
+      .map(({ project, createdAtDate }) => {
+        const rawType = String(project.type || 'Single').trim().toLowerCase();
+        const normalizedType = rawType === 'album' ? 'album' : rawType === 'ep' ? 'ep' : 'single';
+        const displayType = normalizedType === 'album' ? 'Album' : normalizedType === 'ep' ? 'EP' : 'Single';
+        return {
         id: project.id,
-        title: project.title || fallbackById[id]?.title || 'Untitled',
+        title: project.title || 'Untitled',
         artist: 'Kai Zhang',
-        type: project.type || fallbackById[id]?.type || 'Single',
-        image: project.image || fallbackById[id]?.image || superLogo,
-        ageLabel: getRelativeLabelFromRelease(getReleaseDateForProject(project)),
+        type: displayType,
+        typeKey: normalizedType,
+        image: project.image || null,
+        ageLabel: getRelativeLabelFromDate(createdAtDate),
         source: project,
       };
-    });
+      });
 
     if (filter === 'albums') {
-      return resolved.filter((item) => item.type === 'Album');
+      return latest.filter((item) => item.typeKey === 'album');
     }
     if (filter === 'singles') {
-      return resolved.filter((item) => item.type === 'Single' || item.type === 'EP');
+      return latest.filter((item) => item.typeKey === 'single');
     }
-    return resolved;
+    if (filter === 'eps') {
+      return latest.filter((item) => item.typeKey === 'ep');
+    }
+    return latest;
   }, [allProjectsList, filter]);
 
   if (!whatsNewOpen) return null;
@@ -134,23 +115,19 @@ const WhatsNewMenu = () => {
               <X size={20} />
             </button>
           </div>
-          <p className="mt-2.5 text-base text-[#a7a7a7] leading-relaxed">The latest updates from me.</p>
+          <p className="mt-2.5 text-base text-[#a7a7a7] leading-relaxed">Latest updates from me.</p>
 
-          <div className="mt-4 flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setFilter('albums')}
-              className={`px-4 py-2 rounded-full text-sm font-medium leading-none border ${filter === 'albums' ? 'bg-white text-black border-white' : 'bg-[#232323] text-[#d0d0d0] border-transparent hover:text-white'}`}
-            >
-              Albums
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('singles')}
-              className={`px-4 py-2 rounded-full text-sm font-medium leading-none border ${filter === 'singles' ? 'bg-white text-black border-white' : 'bg-[#232323] text-[#d0d0d0] border-transparent hover:text-white'}`}
-            >
-              Singles
-            </button>
+          <div className="mt-4 flex items-center gap-2.5 flex-wrap">
+            {[['all', 'All'], ['albums', 'Albums'], ['singles', 'Singles'], ['eps', 'EPs']].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setFilter(key)}
+                className={`px-4 py-2 rounded-full text-sm font-medium leading-none border ${filter === key ? 'bg-white text-black border-white' : 'bg-[#232323] text-[#d0d0d0] border-transparent hover:text-white'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -163,7 +140,13 @@ const WhatsNewMenu = () => {
             items.map((item) => (
               <div key={item.id} className="mx-2 mt-2 rounded-xl border border-white/10 bg-[#0b0b0b] p-4 min-h-[170px] flex flex-col">
                 <div className="flex items-start gap-3.5">
-                  <img src={item.image} alt={item.title} className="w-[72px] h-[72px] rounded object-cover" />
+                  {item.image ? (
+                    <img src={item.image} alt={item.title} className="w-[72px] h-[72px] rounded object-cover" />
+                  ) : (
+                    <div className="w-[72px] h-[72px] rounded bg-[#262626] flex items-center justify-center text-2xl font-bold text-gray-300">
+                      {item.title[0]}
+                    </div>
+                  )}
                   <div className="pt-1 min-w-0">
                     <button
                       type="button"

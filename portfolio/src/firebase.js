@@ -1,5 +1,8 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { initializeFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
+import { getStorage } from 'firebase/storage';
 
 // Read Firebase config from Vite env variables
 const firebaseConfig = {
@@ -14,17 +17,23 @@ const firebaseConfig = {
 
 // Helpful runtime check for missing build-time env vars.
 const missing = Object.entries(firebaseConfig)
-  .filter(([, v]) => v === undefined || v === "" || v === null)
-  .map(([k]) => k);
+  .filter(([, value]) => value === undefined || value === '' || value === null)
+  .map(([key]) => key);
 if (missing.length) {
   // eslint-disable-next-line no-console
   console.error(
-    `Firebase build config missing (${missing.join(", ")}). ` +
-      `Ensure VITE_FIREBASE_* variables are set for the build (repo secrets / .env).
-      Deployed Firestore requests may use projects/undefined if projectId is missing.`
+    `Firebase build config missing (${missing.join(', ')}). ` +
+      'Ensure VITE_FIREBASE_* variables are set for the build (repo secrets / .env). ' +
+      'Deployed Firestore requests may use projects/undefined if projectId is missing.',
   );
 }
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+const functionsRegion = import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'us-central1';
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+});
+export const storage = getStorage(app);
+export const auth = getAuth(app);
+export const functions = getFunctions(app, functionsRegion);

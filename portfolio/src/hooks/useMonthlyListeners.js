@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { getMonthlyVisitorCount } from '../lib/analytics';
+import { getMonthlyVisitorCount } from '../lib/visitorMetrics';
 
 export function useMonthlyListeners(pollIntervalMs = 60_000) {
   const [count, setCount] = useState(0);

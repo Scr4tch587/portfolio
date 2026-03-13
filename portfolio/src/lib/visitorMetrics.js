@@ -1,6 +1,6 @@
-import { doc, setDoc, serverTimestamp, collection, query, where } from 'firebase/firestore';
-import { getCountFromServer, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase';
 import { getOrCreateVisitorId } from './visitor';
 
 const VISITOR_UPDATE_KEY = 'visitorLastUpdateTs';
@@ -23,11 +23,10 @@ export async function touchVisitor() {
 }
 
 export async function getMonthlyVisitorCount() {
-  const cutoff = Timestamp.fromMillis(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const q = query(collection(db, 'visitors'), where('lastSeen', '>=', cutoff));
   try {
-    const snap = await getCountFromServer(q);
-    const c = snap.data().count;
+    const call = httpsCallable(functions, 'visitorMonthlyCount');
+    const res = await call();
+    const c = Number(res?.data?.count || 0);
     console.debug('[analytics] getMonthlyVisitorCount:', c);
     return c;
   } catch (err) {

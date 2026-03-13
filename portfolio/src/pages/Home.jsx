@@ -11,50 +11,30 @@ import FirstStreamBadge from '../components/FirstStreamBadge';
 import LikedProjectsCard from '../components/LikedProjectsCard';
 import ArtistPickCard from '../components/ArtistPickCard';
 import { useStreamTracker } from '../hooks/useStreamTracker';
+import { useMonthlyListeners } from '../hooks/useMonthlyListeners';
+import { touchVisitor } from '../lib/visitorMetrics';
 import aboutImage from '../assets/profilephoto1.jpg';
 import profilePhoto2 from '../assets/profilephoto2.jpg';
 import profilePhoto4 from '../assets/profilephoto4.jpg';
 import profilePhoto5 from '../assets/profilephoto5.jpg';
 import herobackground from '../assets/herobackground.jpg';
 import waterlooCrest from '../assets/waterloo_logo.webp';
-import orbitalLogo from '../assets/orbitallogo.png';
-import wispLogo from '../assets/wisplogo.png';
-import superLogo from '../assets/superlogo.jpeg';
-import waypostLogo from '../assets/waypostlogo.png';
-import squareLogo from '../assets/square_logo.png';
-import rootifyLogo from '../assets/rootify_logo.png';
-import reelJobsLogo from '../assets/reeljobs.png';
-import projectPeriodicLogo from '../assets/project_periodic.png';
-import kaisMusicBlogLogo from '../assets/kais_music_blog.png';
-import watAiLogo from '../assets/wat_ai_logo.jpeg';
-import docbotLogo from '../assets/docbot.png';
-import dailyLogo from '../assets/logo.svg';
-import sonifyLogo from '../assets/sonify.png';
 import sewebring from '../assets/sewebring.svg';
 import SewringMenu from '../components/SewringMenu';
 import { db } from '../firebase';
-import { collection, getDocs, doc, setDoc, increment, serverTimestamp, query, where, Timestamp, getCountFromServer } from "firebase/firestore";
+import { collection, onSnapshot, doc, setDoc, increment } from 'firebase/firestore';
 
-const initialProjects = [];
+function normalizeDocId(rawId) {
+  const parsed = Number.parseInt(rawId, 10);
+  return Number.isNaN(parsed) ? rawId : parsed;
+}
 
-const initialAlbums = [
-  { id: 98, title: 'Super.com', year: 2026, type: 'Album', image: superLogo, duration: '3:30', description: 'Incoming SWE Intern Summer 2026', tags: ['Python', 'Node', 'React', 'AWS', 'PostgreSQL'], orderingPriority: 1, website: 'https://www.super.com/home' },
-  { id: 99, title: 'WAT.ai', year: 2026, type: 'Album', image: watAiLogo, duration: '8:00', description: 'ML social listening platform for vaccine research.', tags: ['Langchain', 'Web scraping', 'AWS'], orderingPriority: 2, website: 'https://watai.ca/' },
-  { id: 100, title: 'UW Orbital', year: 2025, type: 'Album', image: orbitalLogo, duration: '3:45', description: 'University of Waterloo satellite design team competing in the Canadian Satellite Design Challenge, building a launch-ready 3U CubeSat.\n\n As a full stack developer for the ground station, I improve how mission data is displayed and managed.', tags: ['FastAPI', 'React', 'PostgreSQL'], orderingPriority: 3, github: 'https://github.com/UWOrbital/OBC-firmware', website: 'https://www.uworbital.com/' },
-];  
-
-const initialSingles = [
-  { id: 200, title: 'Sonify', year: 2026, type: 'Single', image: sonifyLogo, duration: '2:05', description: 'A voice-powered analytics assistant that turns commerce data into sound. \n\n Best ElevanLabs project at ListenHacks 2026.', tags: ['Shopify', 'Backboard.io', 'ElevenLabs', 'Node.js'], orderingPriority: 1, github: 'https://github.com/Doomsy1/Sonify' },
-  { id: 201, title: 'The Daily', year: 2026, type: 'Single', image: dailyLogo, duration: '3:10', description: 'Simple RAG/LangGraph chatbot that scrapes YC\'s Hacker News daily to keep users up to date on new tech developments\n\nWAT.ai Onboarding project', tags: ['LangGraph', 'RAG', 'Streamlit', 'EC2'], orderingPriority: 2, github: 'https://github.com/Scr4tch587/thedaily' },
-  { id: 202, title: 'DocBot', year: 2026, type: 'Single', image: docbotLogo, duration: '3:58', description: 'A GPS for your codebase powered by a recursive agentic AI map-reduce pipeline. \n\n Submitted to CXC 2026', tags: ['LangGraph', 'RAG', 'Tree-sitter', ], orderingPriority: 3, github: 'https://github.com/Scr4tch587/docbot', website: 'https://devpost.com/software/work-in-progress-tkjln5' },
-  { id: 203, title: 'ReelJobs', year: 2026, type: 'Single', image: reelJobsLogo, duration: '5:06', description: 'Instagram reels inspired app where users scroll job postings presented as short-form videos and can apply in one tap.  \n\n 3rd place at Deltahacks 12', tags: ['FastAPI', 'React Native', 'MongoDB Atlas', 'Gemini', 'Playwright'], orderingPriority: 4, github: 'https://github.com/Scr4tch587/DeltaHacks12', website: 'https://devpost.com/software/reeljobs' },
-  { id: 104, title: 'Rootify', year: 2025, type: 'EP', image: rootifyLogo, duration: '3:30', description: 'Evidence-first music discovery system that maps artist influences using real textual sources. \n\n Currently WIP', tags: ['spaCy', 'FastAPI', 'SQLAlchemy', 'PostgreSQL'], orderingPriority: 5, github: 'https://github.com/Scr4tch587/Rootify-2.0', website: '' },
-  { id: 103, title: 'Wisp', year: 2025, type: 'EP', image: wispLogo, duration: '2:17', description: 'Mobile app that enables users to capture, refine, and organize ideas in under 5 seconds using only their voice through real-time AI.', tags: ['React Native', 'FastAPI', 'OpenAI API', 'MCP', 'Supabase'], orderingPriority: 6, github: 'https://github.com/Scr4tch587/wisp', website: '' },
-  { id: 204, title: 'Waypost', year: 2025, type: 'Single', image: waypostLogo, duration: '4:02', description:'Sustainable travel platform using QR-based item tracking to support local businesses and the circular economy. \n\n 2nd place at Newhacks 2025.', tags:['FastAPI','React','Firebase','Cloudinary'], orderingPriority :7 , github:'https://github.com/Scr4tch587/waypost' , website:'https://devpost.com/software/hi-team'},
-  { id: 305, title: 'kaizhang.ca', year: 2025, type: 'EP', image: squareLogo, duration: '2:45', description: 'The website you\'re browsing right now. A showcase of my projects, passions, and skills, packaged in a Spotify-inspired UI.', tags: ['React', 'Tailwind CSS', 'Firebase'], orderingPriority: 8, github: 'https://github.com/Scr4tch587/portfolio', website: 'https://kaizhang.ca' },
-  { id: 306, title: 'Project Periodic', year: 2024, type: 'Single', image: projectPeriodicLogo, duration: '3:15', description: 'Educational survival game where players use chemical reactions to fight off enemies.', tags: ['GameMaker', 'GameMakerLanguage'], orderingPriority: 9, github: 'https://github.com/Scr4tch587/Project-Periodic', website: '' },
-  { id: 307, title: "Kai's Music Blog", year: 2023, type: 'Single', image: kaisMusicBlogLogo, duration: '2:00', description: 'A blog platform where I share music reviews of songs and albums I enjoy.', tags: ['Substack'], orderingPriority: 10, github: '', website: 'https://kaizhang.substack.com/' },
-];
+function withResolvedImage(project) {
+  return {
+    ...project,
+    image: project.imageUrl || null,
+  };
+}
 
 const Home = () => {
   const {
@@ -90,61 +70,48 @@ const Home = () => {
   // Stream tracking for currently playing project
   const streamTracker = useStreamTracker(currentProject?.id);
 
-  // Monthly listeners: static 0 (feature removed)
-
   const galleryImages = [aboutImage, profilePhoto2, profilePhoto4, profilePhoto5];
 
   // Combine all project types for view tracking
   const [allProjects, setAllProjects] = useState([]); // Initialize as empty array
   const [firestoreInitialized, setFirestoreInitialized] = useState(false);
   const hasAutoSelected = useRef(false);
-  const [monthlyVisitorCount, setMonthlyVisitorCount] = useState(0);
+  const monthlyVisitorCount = useMonthlyListeners();
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        console.log("Fetching projects from Firestore...");
-        const projectsCollectionRef = collection(db, "projects");
-        const projectsSnapshot = await getDocs(projectsCollectionRef);
-        const firestoreProjects = projectsSnapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() }));
-        console.log("Fetched projects:", firestoreProjects);
+    const unsubscribe = onSnapshot(
+      collection(db, 'projects'),
+      (projectsSnapshot) => {
+        const firestoreProjects = projectsSnapshot.docs.map((projectDoc) => ({
+          docId: projectDoc.id,
+          id: normalizeDocId(projectDoc.id),
+          ...projectDoc.data(),
+        }));
 
-        const combinedLocalProjects = [...initialAlbums, ...initialSingles, ...initialProjects];
-        
-        // Deduplicate local projects by ID
-        const uniqueLocalProjects = Array.from(new Map(combinedLocalProjects.map(item => [item.id, item])).values());
-
-        const mergedProjects = uniqueLocalProjects.map(localProject => {
-          const firestoreProject = firestoreProjects.find(fp => fp.id === localProject.id);
-          // Parse 'plays' string to number as default view count if firestore is empty
-          const defaultViews = localProject.plays ? parseInt(localProject.plays.replace(/,/g, ''), 10) : 0;
-          
-          return {
-              ...localProject,
-              views: firestoreProject ? firestoreProject.views : defaultViews,
-              github: firestoreProject && firestoreProject.github ? firestoreProject.github : (localProject.github || ''),
-              website: firestoreProject && firestoreProject.website ? firestoreProject.website : (localProject.website || ''),
-            };
-        });
-
-        // Ensure all Firestore projects are included, even if not in initial local lists
-        // Only include Firestore-only projects that have essential fields (title)
-        firestoreProjects.forEach(firestoreProject => {
-          if (!mergedProjects.some(mp => mp.id === firestoreProject.id) && firestoreProject.title) {
-            mergedProjects.push(firestoreProject);
-          }
-        });
+        const mergedProjects = firestoreProjects
+          .map((firestoreProject) =>
+            withResolvedImage({
+              ...firestoreProject,
+              github: firestoreProject.github ?? '',
+              website: firestoreProject.website ?? '',
+              tags: Array.isArray(firestoreProject.tags) ? firestoreProject.tags : [],
+              views: Number.isFinite(firestoreProject.views) ? firestoreProject.views : 0,
+            }),
+          )
+          .filter((project) => project.title)
+          .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
 
         setAllProjects(mergedProjects);
         setAllProjectsList(mergedProjects);
         setFirestoreInitialized(true);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
+      },
+      (error) => {
+        console.error('Error fetching projects:', error);
+      },
+    );
 
-    fetchProjects();
-  }, [setAllProjectsList]); // Run once on component mount
+    return () => unsubscribe();
+  }, [setAllProjectsList]);
 
   useEffect(() => {
     if (!firestoreInitialized || allProjects.length === 0 || currentProject || hasAutoSelected.current) {
@@ -180,32 +147,16 @@ const Home = () => {
   }, [streamCompleteTrigger, currentProject, firestoreInitialized]);
 
   useEffect(() => {
-    const trackAndCountMonthlyVisitors = async () => {
+    const trackMonthlyVisitor = async () => {
       try {
-        // Prevent double-counting in React StrictMode while still counting each hard refresh.
-        const pageLoadKey = `visit-tracked-${Math.floor(performance.timeOrigin)}`;
-        const alreadyTrackedThisLoad = sessionStorage.getItem(pageLoadKey) === '1';
-
-        if (!alreadyTrackedThisLoad) {
-          // Mark first to prevent duplicate writes during React StrictMode double-invocation.
-          sessionStorage.setItem(pageLoadKey, '1');
-          const visitDocId = `visit-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-          await setDoc(doc(db, 'visitors', visitDocId), { lastSeen: serverTimestamp() });
-        }
-
-        const cutoff = Timestamp.fromMillis(Date.now() - (30 * 24 * 60 * 60 * 1000));
-        const monthlyVisitsQuery = query(
-          collection(db, 'visitors'),
-          where('lastSeen', '>=', cutoff),
-        );
-        const countSnapshot = await getCountFromServer(monthlyVisitsQuery);
-        setMonthlyVisitorCount(countSnapshot.data().count || 0);
+        await touchVisitor();
+        window.dispatchEvent(new Event('monthlyListeners:refresh'));
       } catch (error) {
-        console.error('Error tracking monthly visitors:', error);
+        console.error('Error tracking visitor:', error);
       }
     };
 
-    trackAndCountMonthlyVisitors();
+    trackMonthlyVisitor();
   }, []);
 
   useEffect(() => {
@@ -240,6 +191,7 @@ const Home = () => {
 
     const updateVisibleCount = () => {
       const rowWidth = row.clientWidth || 0;
+      if (rowWidth <= 0) return;
       const firstCard = row.firstElementChild;
       const styles = window.getComputedStyle(row);
       const gapValue = parseFloat(styles.columnGap || styles.gap || '16');
@@ -248,10 +200,7 @@ const Home = () => {
         : 192; // fallback to w-48
 
       const slotWidth = cardWidth + gapValue;
-      if (slotWidth <= 0) {
-        setVisibleDiscographyCount(1);
-        return;
-      }
+      if (slotWidth <= 0) return;
 
       // Subtract a tiny epsilon to avoid rendering a partially visible final card.
       const fullCards = Math.floor(((rowWidth + gapValue) - 1) / slotWidth);
@@ -267,7 +216,7 @@ const Home = () => {
       resizeObserver.disconnect();
       window.removeEventListener('resize', updateVisibleCount);
     };
-  }, [rightSidebarOpen]);
+  }, [rightSidebarOpen, showAllDiscography, discographyFilter, allProjects.length]);
 
   const handlePlay = (projectToPlay) => {
     if (currentProject?.id === projectToPlay.id) {
@@ -284,22 +233,36 @@ const Home = () => {
     .sort((a, b) => b.views - a.views)
     .slice(0, popularLimit);
 
-  const filteredDiscography = (discographyFilter === 'albums' ? initialAlbums : initialSingles)
+  const allDiscographyItems = [...allProjects]
+    .filter((project) => project.title)
     .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+
+  const albumItems = allDiscographyItems.filter((project) => project.type === 'Album');
+  const singleItems = allDiscographyItems.filter((project) => project.type === 'Single');
+  const epItems = allDiscographyItems.filter((project) => project.type === 'EP');
+
+  const filteredDiscography = (
+    discographyFilter === 'albums' ? albumItems : discographyFilter === 'singles' ? singleItems : epItems
+  ).sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
   const visibleDiscography = visibleDiscographyCount
     ? filteredDiscography.slice(0, visibleDiscographyCount)
     : filteredDiscography;
 
-  const allDiscographyItems = [...initialAlbums, ...initialSingles]
-    .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
-
   const showAllFilteredItems = showAllFilter === 'all'
     ? allDiscographyItems
     : showAllFilter === 'albums'
-      ? initialAlbums.sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999))
-      : initialSingles.sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+      ? albumItems
+      : showAllFilter === 'singles'
+        ? singleItems
+        : epItems;
 
-  const showAllFilterLabel = showAllFilter === 'all' ? 'All' : showAllFilter === 'albums' ? 'Albums' : 'Singles and EPs';
+  const showAllFilterLabel = showAllFilter === 'all'
+    ? 'All'
+    : showAllFilter === 'albums'
+      ? 'Albums'
+      : showAllFilter === 'singles'
+        ? 'Singles'
+        : 'EPs';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -436,7 +399,7 @@ const Home = () => {
                     <LikedProjectsCard />
                     {/* pass the Super.com project */}
                     <div className="mr-16">
-                      <ArtistPickCard project={initialAlbums.find(a => a.id === 98)} descriptor="summer 26 coop" />
+                      <ArtistPickCard project={allProjects.find((project) => project.id === 98)} descriptor="summer 26 coop" />
                     </div>
                   </div>
                 </div>
@@ -539,8 +502,8 @@ const Home = () => {
                       </button>
                       {showAllDropdownOpen && (
                         <div className="absolute right-0 top-full mt-2 bg-[#282828] rounded-md shadow-xl py-1 z-50 min-w-[160px]">
-                          {['all', 'albums', 'singles'].map((filter) => {
-                            const label = filter === 'all' ? 'All' : filter === 'albums' ? 'Albums' : 'Singles and EPs';
+                          {['all', 'albums', 'singles', 'eps'].map((filter) => {
+                            const label = filter === 'all' ? 'All' : filter === 'albums' ? 'Albums' : filter === 'singles' ? 'Singles' : 'EPs';
                             const isActive = showAllFilter === filter;
                             return (
                               <button
@@ -590,7 +553,7 @@ const Home = () => {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold text-left">Discography</h2>
                     <button
-                      onClick={() => { setShowAllFilter(discographyFilter === 'albums' ? 'albums' : 'singles'); setShowAllDiscography(true); }}
+                      onClick={() => { setShowAllFilter(discographyFilter); setShowAllDiscography(true); }}
                       className="text-sm font-bold text-gray-400 hover:text-white transition-colors"
                     >
                       Show all
@@ -609,7 +572,13 @@ const Home = () => {
                           onClick={() => setDiscographyFilter('singles')}
                           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'singles' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
                       >
-                          Singles and EPs
+                          Singles
+                      </button>
+                      <button
+                          onClick={() => setDiscographyFilter('eps')}
+                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'eps' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
+                      >
+                          EPs
                       </button>
                   </div>
 
