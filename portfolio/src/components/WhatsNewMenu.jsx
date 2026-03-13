@@ -3,11 +3,8 @@ import { Play, X } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
-// Hard reset point for "What's New": only projects created on/after this date appear.
-const WHATS_NEW_RESET_AT_MS = Date.parse('2026-03-13T00:00:00.000Z');
-
 function getProjectDate(project) {
-  const raw = project?.createdAt;
+  const raw = project?.whatsNewAt || project?.createdAt;
   if (raw?.toDate) return raw.toDate();
   if (raw?.seconds) return new Date(raw.seconds * 1000);
   if (typeof raw === 'string' || typeof raw === 'number') {
@@ -67,8 +64,8 @@ const WhatsNewMenu = () => {
       }))
       .filter(({ project, createdAtDate }) => (
         project?.title
+        && project?.whatsNewEnabled === true
         && createdAtDate
-        && createdAtDate.getTime() >= WHATS_NEW_RESET_AT_MS
       ))
       .sort((a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
       .slice(0, 8)

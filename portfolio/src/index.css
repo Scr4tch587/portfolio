@@ -148,21 +148,33 @@ body {
 	}
 }
 
-/* Custom scrollbar styles to match Spotify */
+/* Spotify-like overlay scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-	width: 12px;
-	height: 12px;
+	width: 10px;
+	height: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-	background: #121212;
+	background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-	background-color: #2a2a2a;
-	border-radius: 10px;
-	border: 2px solid #121212;
+	background-color: rgba(255, 255, 255, 0.32);
+	border-radius: 999px;
+	border-left: 2px solid transparent;
+	border-right: 2px solid transparent;
+	border-top: 6px solid transparent;
+	border-bottom: 6px solid transparent;
+	background-clip: padding-box;
+	min-height: 22px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-	background-color: #3e3e3e;
+	background-color: rgba(255, 255, 255, 0.5);
+}
+.custom-scrollbar::-webkit-scrollbar-corner {
+	background: transparent;
+}
+.custom-scrollbar {
+	scrollbar-width: thin; /* Firefox */
+	scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
 
 /* Optional: subtle shadow when scrolling (Layout toggles `scrolling`) */

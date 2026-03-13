@@ -133,6 +133,8 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
           ...payload,
           views: 0,
           createdAt: serverTimestamp(),
+          whatsNewAt: serverTimestamp(),
+          whatsNewEnabled: true,
         });
       }
 
