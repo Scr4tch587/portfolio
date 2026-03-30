@@ -67,6 +67,7 @@ const Home = () => {
   const sewebringButtonRef = useRef(null);
   const discographyRowRef = useRef(null);
   const lastProcessedStreamTrigger = useRef(0);
+  const currentProjectRef = useRef(currentProject);
 
   // Stream tracking for currently playing project
   const streamTracker = useStreamTracker(currentProject?.id);
@@ -125,28 +126,28 @@ const Home = () => {
     setIsPlaying(false);
   }, [allProjects, currentProject, firestoreInitialized, playProject, setIsPlaying]);
 
+  // Keep a ref to currentProject so the stream effect doesn't need it as a dependency.
+  // This prevents the Firestore snapshot → currentProject update → effect re-run loop.
   useEffect(() => {
-    if (streamCompleteTrigger > 0 && streamCompleteTrigger !== lastProcessedStreamTrigger.current && currentProject && firestoreInitialized) {
-        lastProcessedStreamTrigger.current = streamCompleteTrigger;
-        console.log("Incrementing view for project:", currentProject.id);
-        setAllProjects(prevProjects =>
-            prevProjects.map(p =>
-                p.id === currentProject.id ? { ...p, views: p.views + 1 } : p
-            )
-        );
-      // Trigger immediate UI animation (don't wait for Firestore)
-      setAnimatedProjectId(currentProject.id);
+    currentProjectRef.current = currentProject;
+  }, [currentProject]);
+
+  useEffect(() => {
+    if (streamCompleteTrigger > 0 && streamCompleteTrigger !== lastProcessedStreamTrigger.current && firestoreInitialized) {
+      const project = currentProjectRef.current;
+      if (!project) return;
+      lastProcessedStreamTrigger.current = streamCompleteTrigger;
+
+      // Trigger animation immediately (Firestore snapshot will update the count)
+      setAnimatedProjectId(project.id);
       setTimeout(() => setAnimatedProjectId(null), 500);
 
-      // Update Firestore asynchronously (don't block UI)
-      const projectRef = doc(db, "projects", String(currentProject.id));
+      // Write to Firestore — onSnapshot will update the local count automatically
+      const projectRef = doc(db, "projects", String(project.id));
       setDoc(projectRef, { views: increment(1) }, { merge: true })
-        .then(() => console.log("Firestore updated successfully"))
         .catch(err => console.error("Error updating Firestore:", err));
-
-      // monthly listener tracking disabled — keep behavior minimal and local
     }
-  }, [streamCompleteTrigger, currentProject, firestoreInitialized]);
+  }, [streamCompleteTrigger, firestoreInitialized]);
 
   useEffect(() => {
     const trackMonthlyVisitor = async () => {
