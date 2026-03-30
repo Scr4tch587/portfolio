@@ -356,13 +356,11 @@ export const PlayerProvider = ({ children }) => {
   useEffect(() => {
     let interval = null;
     if (isPlaying && durationSeconds > 0) {
-      const updateInterval = 100; // Update every 100ms
-      // Progress at 20% per second = 100% in 5 seconds
-      // incrementPerInterval = (durationSeconds * 0.20) * (updateInterval / 1000)
-      const incrementPerInterval = durationSeconds * 0.02; // 0.20 per second * 0.1 seconds
+      const updateInterval = 50; // 50ms → 20fps, smoother progress bar
+      // Progress completes in 5 seconds: incrementPerInterval = durationSeconds * 0.20 * (50/1000)
+      const incrementPerInterval = durationSeconds * 0.01; // 0.20 per second * 0.05 seconds
 
       interval = setInterval(() => {
-        // Update Playback Time
         setCurrentTime((prevTime) => {
           if (prevTime + incrementPerInterval >= durationSeconds) {
             return 0; // Loop
@@ -370,8 +368,8 @@ export const PlayerProvider = ({ children }) => {
           return prevTime + incrementPerInterval;
         });
 
-        // Update Continuous Focus Time
-        setContinuousPlayTime(prev => prev + 100);
+        // Increment by actual interval duration so stream threshold (5000ms) stays accurate
+        setContinuousPlayTime(prev => prev + updateInterval);
 
       }, updateInterval);
     } else {

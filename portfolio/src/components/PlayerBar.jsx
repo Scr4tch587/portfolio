@@ -93,7 +93,7 @@ const PlayerBar = () => {
         <div className="w-full flex items-center gap-2 text-[11px] text-gray-400 font-medium">
           <span className="tabular-nums">{formatTime(currentTime)}</span>
           <div className="h-1 bg-[#4d4d4d] rounded-full flex-1 group cursor-pointer">
-             <div className="h-full bg-white rounded-full group-hover:bg-green-500 relative" style={{ width: `${progressPercentage}%` }}>
+             <div className="h-full bg-white rounded-full group-hover:bg-green-500 relative" style={{ width: `${progressPercentage}%`, transition: 'width 50ms linear' }}>
                 <div className="hidden group-hover:block absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow"></div>
              </div>
           </div>
