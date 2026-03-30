@@ -66,6 +66,7 @@ const Home = () => {
   const followButtonRef = useRef(null);
   const sewebringButtonRef = useRef(null);
   const discographyRowRef = useRef(null);
+  const lastProcessedStreamTrigger = useRef(0);
 
   // Stream tracking for currently playing project
   const streamTracker = useStreamTracker(currentProject?.id);
@@ -125,7 +126,8 @@ const Home = () => {
   }, [allProjects, currentProject, firestoreInitialized, playProject, setIsPlaying]);
 
   useEffect(() => {
-    if (streamCompleteTrigger > 0 && currentProject && firestoreInitialized) {
+    if (streamCompleteTrigger > 0 && streamCompleteTrigger !== lastProcessedStreamTrigger.current && currentProject && firestoreInitialized) {
+        lastProcessedStreamTrigger.current = streamCompleteTrigger;
         console.log("Incrementing view for project:", currentProject.id);
         setAllProjects(prevProjects =>
             prevProjects.map(p =>
