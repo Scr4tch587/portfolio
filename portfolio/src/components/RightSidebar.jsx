@@ -13,7 +13,7 @@ const RightSidebar = ({ onClose }) => {
   const visitLabel = hasProject && devpostProjectIds.has(currentProject?.id) ? 'Devpost' : 'Website';
 
   return (
-    <div className="hidden lg:flex w-80 bg-[#121212] flex-col p-4 rounded-lg text-white overflow-y-auto custom-scrollbar animate-fade-in-up shrink-0 border border-white/5" style={{ fontFamily: 'Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}>
+    <div className="hidden lg:flex w-80 bg-[#121212] flex-col p-4 rounded-lg text-white overflow-y-auto custom-scrollbar animate-fade-in-up shrink-0 border border-white/5" style={{ fontFamily: 'Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}>
       <div className="flex justify-between items-center mb-5">
         <span className="font-bold text-base text-left">{title}</span>
         <button type="button" onClick={onClose} aria-label="Close details">

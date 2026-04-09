@@ -295,7 +295,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-full pb-8 bg-black">
+    <div className="min-h-full pb-6 bg-[#121212]">
       {/* Header / Banner */}
       {!showAllDiscography && <div
         className="flex flex-col justify-end p-8 h-[370px] bg-cover relative"
@@ -303,9 +303,9 @@ const Home = () => {
       >
         {/* Overlay to darken image and keep text readable */}
         <div className="absolute inset-0 bg-black opacity-30"></div>
-        
-        {/* Fade to black at the bottom of the image */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-black to-transparent"></div>
+
+        {/* Fade to page bg at the bottom of the image */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-[#121212] to-transparent"></div>
 
         <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
@@ -318,14 +318,14 @@ const Home = () => {
       </div>}
 
       {/* Main Content Area - now has a static black background by default */}
-      <div className="relative pt-4 bg-black min-h-[calc(100vh - 400px - 64px)]"> {/* 400px banner height, 64px player bar if it exists. */} 
-          {/* Gradient overlay for the top section */} 
-          <div className="absolute inset-x-0 top-0 h-90 bg-linear-to-b from-[#252b36] to-black"></div>
+      <div className="relative pt-3 bg-[#121212] min-h-[calc(100vh - 400px - 64px)]"> {/* 400px banner height, 64px player bar if it exists. */}
+          {/* Gradient overlay for the top section */}
+          <div className="absolute inset-x-0 top-0 h-90 bg-linear-to-b from-[#252b36] to-[#121212]"></div>
 
           <div className="relative z-10">
               {!showAllDiscography && <>
               {/* Action Bar */}
-              <div className="flex flex-wrap items-center gap-6 px-8 py-4 relative">
+              <div className="flex flex-wrap items-center gap-6 px-7 py-4 relative">
                 <button 
                     onClick={handlePlayRandom}
                     className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform focus:outline-none"
@@ -409,14 +409,14 @@ const Home = () => {
               </div>
 
               {/* Popular Section (Top Projects) */}
-              <div className="px-8 mt-4">
-                <h2 className="text-2xl font-bold mb-4 text-left">Popular</h2>
+              <div className="px-7 mt-4">
+                <h2 className="text-2xl font-bold mb-3 text-left">Popular</h2>
                 <div className="flex flex-col">
                     {popularProjects.map((project, index) => (
                         <div 
                             key={project.id}
                             onClick={() => handlePlay(project)}
-                            className={`grid grid-cols-[16px_4fr_2fr_minmax(60px,1fr)] gap-4 px-4 py-2 hover:bg-white/10 rounded-md group items-center text-sm cursor-pointer ${isCurrent(project) ? 'text-green-500' : 'text-gray-400'}`}
+                            className={`grid grid-cols-[16px_4fr_2fr_minmax(60px,1fr)] gap-4 px-4 py-[7px] hover:bg-white/10 rounded group items-center text-sm cursor-pointer ${isCurrent(project) ? 'text-green-500' : 'text-gray-400'}`}
                         >
                             <span className={`group-hover:hidden ${isCurrent(project) && isPlaying ? 'hidden' : 'block'}`}>{index + 1}</span>
                             
@@ -435,7 +435,7 @@ const Home = () => {
 
                             
                             <div className={`flex items-center gap-3 ${isCurrent(project) ? 'text-green-500' : 'text-white'}`}>
-                                <div className="w-10 h-10 bg-gray-700 flex items-center justify-center font-bold rounded text-white relative overflow-hidden">
+                                <div className="w-10 h-10 bg-[#1c1c1c] flex items-center justify-center font-bold rounded text-white relative overflow-hidden">
                                      {project.image ? (
                                         <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
                                     ) : (
@@ -445,7 +445,7 @@ const Home = () => {
                                     {isCurrent(project) && isPlaying && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"></div>}
                                 </div>
                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                   <span className="font-medium text-base truncate">{project.title}</span>
+                                   <span className="font-medium text-[15px] truncate">{project.title}</span>
                                    <FirstStreamBadge projectId={project.id} />
                                  </div>
                             </div>
@@ -472,7 +472,7 @@ const Home = () => {
                 </div>
                 <div 
                     onClick={() => setPopularLimit(prev => prev === 5 ? 10 : 5)}
-                    className="mt-4 px-4 text-sm font-bold text-gray-400 hover:text-white cursor-pointer transition-colors"
+                    className="mt-3 px-4 text-sm font-bold text-[#b3b3b3] hover:text-white cursor-pointer transition-colors"
                 >
                     {popularLimit === 5 ? 'See more' : 'See less'}
                 </div>
@@ -482,10 +482,10 @@ const Home = () => {
               {/* Discography Section */}
               {showAllDiscography ? (
                 /* Full-screen "Show All" Discography View */
-                <div className="px-8 mt-4 mb-20">
+                <div className="px-7 mt-4 mb-16">
                   {/* Header with back arrow and filter dropdown */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={() => { setShowAllDiscography(false); setShowAllDropdownOpen(false); }}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 transition-colors"
@@ -524,40 +524,40 @@ const Home = () => {
                     </div>
                   </div>
                   {/* Grid of projects */}
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                  <div className="flex flex-wrap gap-5">
                     {showAllFilteredItems.map((item) => (
                       <div
                         key={item.id}
                         onClick={() => handlePlay(item)}
-                        className={`p-3 rounded-lg cursor-pointer group hover:bg-[#1A1A1A] transition-colors ${isCurrent(item) ? 'text-green-500' : 'text-white'}`}
+                        className={`w-[170px] shrink-0 cursor-pointer group p-3 rounded-md hover:bg-[#1a1a1a] transition-colors ${isCurrent(item) ? 'text-green-500' : 'text-white'}`}
                       >
-                        <div className="w-full aspect-square bg-gray-700 rounded-md shadow-lg relative flex items-center justify-center text-4xl font-bold text-gray-500 overflow-hidden">
+                        <div className="w-full aspect-square bg-[#1c1c1c] rounded-[4px] shadow-lg relative flex items-center justify-center text-3xl font-bold text-gray-500 overflow-hidden">
                           {item.image ? (
                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                           ) : (
                             item.title[0]
                           )}
                           <div className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                            <Play size={20} fill="black" className="ml-0.5 text-black" />
+                            <Play size={18} fill="black" className="ml-0.5 text-black" />
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-2 min-w-0">
-                          <h3 className="font-bold text-sm truncate">{item.title}</h3>
+                        <div className="flex items-center gap-1.5 mt-2 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{item.title}</h3>
                           <FirstStreamBadge projectId={item.id} />
                         </div>
-                        <p className="text-xs text-gray-400">{item.year} &bull; {item.type}</p>
+                        <p className="text-xs text-[#b3b3b3]">{item.year} &bull; {item.type}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
                 /* Normal Discography Section */
-                <div className="px-8 mt-8">
+                <div className="px-7 mt-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold text-left">Discography</h2>
                     <button
                       onClick={() => { setShowAllFilter(discographyFilter); setShowAllDiscography(true); }}
-                      className="text-sm font-bold text-gray-400 hover:text-white transition-colors"
+                      className="text-sm font-bold text-[#b3b3b3] hover:text-white transition-colors"
                     >
                       Show all
                     </button>
@@ -567,45 +567,45 @@ const Home = () => {
                   <div className="flex gap-2 mb-4">
                       <button
                           onClick={() => setDiscographyFilter('albums')}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'albums' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
+                          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'albums' ? 'bg-white text-black' : 'bg-white/7 text-white hover:bg-white/12'}`}
                       >
                           Albums
                       </button>
                       <button
                           onClick={() => setDiscographyFilter('singles')}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'singles' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
+                          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'singles' ? 'bg-white text-black' : 'bg-white/7 text-white hover:bg-white/12'}`}
                       >
                           Singles
                       </button>
                       <button
                           onClick={() => setDiscographyFilter('eps')}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'eps' ? 'bg-white text-black' : 'bg-[#2A2A2A] text-white hover:bg-[#3E3E3E]'}`}
+                          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${discographyFilter === 'eps' ? 'bg-white text-black' : 'bg-white/7 text-white hover:bg-white/12'}`}
                       >
                           EPs
                       </button>
                   </div>
 
-                  <div ref={discographyRowRef} className="flex gap-4 overflow-hidden pb-4">
+                  <div ref={discographyRowRef} className="flex gap-5 overflow-hidden pb-3">
                        {visibleDiscography.map((item) => (
                           <div
                               key={item.id}
                               onClick={() => handlePlay(item)}
-                              className={`bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition-colors cursor-pointer group w-48 shrink-0 ${isCurrent(item) ? 'text-green-500' : 'text-white'}`}
+                              className={`w-[170px] shrink-0 cursor-pointer group p-3 rounded-md hover:bg-[#1a1a1a] transition-colors ${isCurrent(item) ? 'text-green-500' : 'text-white'}`}
                           >
-                              <div className="w-full aspect-square bg-gray-700 mb-4 rounded-md shadow-lg relative flex items-center justify-center text-4xl font-bold text-gray-500">
+                              <div className="w-full aspect-square bg-[#1c1c1c] rounded-[4px] shadow-lg relative flex items-center justify-center text-3xl font-bold text-gray-500 overflow-hidden">
                                    {item.image ? (
                                       <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                                   ) : (
                                       item.title[0]
-                                  )}                                 <div className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                                      <Play size={24} fill="black" className="ml-1 text-black" />
+                                  )}                                 <div className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                                      <Play size={20} fill="black" className="ml-0.5 text-black" />
                                    </div>
                               </div>
-                              <div className="flex items-center gap-2 mb-1 min-w-0">
-                                <h3 className="font-bold truncate">{item.title}</h3>
+                              <div className="flex items-center gap-1.5 mb-0.5 mt-2 min-w-0">
+                                <h3 className="font-semibold text-sm truncate">{item.title}</h3>
                                 <FirstStreamBadge projectId={item.id} />
                               </div>
-                              <p className="text-sm text-gray-400 line-clamp-2">{item.year} • {item.type}</p>
+                              <p className="text-xs text-[#b3b3b3] line-clamp-2">{item.year} • {item.type}</p>
                           </div>
                        ))}
                   </div>
@@ -614,7 +614,7 @@ const Home = () => {
 
               {!showAllDiscography &&
               /* About Section */
-              <div className="px-8 mt-8 mb-20">
+              <div className="px-7 mt-6 mb-16">
                 <h2 className="text-2xl font-bold mb-4 text-left">About</h2>
                 <div 
                     onClick={() => setIsGalleryOpen(true)}

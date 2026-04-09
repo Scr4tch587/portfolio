@@ -9,7 +9,7 @@ import WhatsNewMenu from './WhatsNewMenu';
 import { usePlayer } from '../context/PlayerContext';
 
 const Layout = ({ children }) => {
-  const { rightSidebarOpen, toggleRightSidebar } = usePlayer();
+  const { rightSidebarOpen, toggleRightSidebar, currentProject, togglePlay } = usePlayer();
   const mainRef = useRef(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -31,9 +31,23 @@ const Layout = ({ children }) => {
     };
   }, []);
 
+  // Spacebar toggles play/pause when a track is active
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code !== 'Space') return;
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+      if (!currentProject) return;
+      e.preventDefault();
+      togglePlay();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentProject, togglePlay]);
+
   return (
-    <div className="bg-black min-h-screen font-sans text-white flex flex-col h-screen overflow-hidden">
-      <div className="flex flex-1 p-2 gap-2 overflow-hidden pb-24">
+    <div className="bg-[#0a0a0a] min-h-screen font-sans text-white flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-1 p-2 gap-2 overflow-hidden pb-[84px]">
         <LeftSidebar />
 
         <div className="flex-1 flex flex-col bg-[#121212] rounded-lg overflow-hidden relative">

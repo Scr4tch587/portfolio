@@ -57,7 +57,7 @@ const TopBar = ({ scrollY }) => {
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 120)}
             placeholder="What do you want to play?"
-            className="bg-transparent outline-none text-white text-base px-3 w-full placeholder:text-gray-400"
+            className="bg-transparent outline-none text-white text-[15px] px-3 w-full placeholder:text-[#b3b3b3]"
           />
           <div className="h-6 w-px bg-white/15 mr-2" />
           <button
@@ -102,7 +102,7 @@ const TopBar = ({ scrollY }) => {
         <div className="relative group">
           <button
             type="button"
-            className="w-10 h-10 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-center text-gray-300 hover:text-white"
+            className="w-9 h-9 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-center text-gray-300 hover:text-white"
             aria-label="Profile"
           >
             <User size={18} />
