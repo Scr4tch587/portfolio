@@ -410,7 +410,7 @@ const Home = () => {
 
               {/* Popular Section (Top Projects) */}
               <div className="px-7 mt-4">
-                <h2 className="text-2xl font-bold mb-3 text-left">Popular</h2>
+                <h2 className="text-2xl font-extrabold mb-3 text-left">Popular</h2>
                 <div className="flex flex-col">
                     {popularProjects.map((project, index) => (
                         <div 
@@ -445,7 +445,7 @@ const Home = () => {
                                     {isCurrent(project) && isPlaying && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"></div>}
                                 </div>
                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                   <span className="font-medium text-[15px] truncate">{project.title}</span>
+                                   <span className="font-medium text-base truncate">{project.title}</span>
                                    <FirstStreamBadge projectId={project.id} />
                                  </div>
                             </div>
@@ -492,7 +492,7 @@ const Home = () => {
                       >
                         <ArrowLeft size={20} className="text-white" />
                       </button>
-                      <h2 className="text-2xl font-bold text-left">Discography</h2>
+                      <h2 className="text-2xl font-extrabold text-left">Discography</h2>
                     </div>
                     {/* Filter Dropdown */}
                     <div className="relative" ref={showAllDropdownRef}>
@@ -542,10 +542,10 @@ const Home = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 mt-2 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">{item.title}</h3>
+                          <h3 className="font-bold text-[15px] truncate">{item.title}</h3>
                           <FirstStreamBadge projectId={item.id} />
                         </div>
-                        <p className="text-xs text-[#b3b3b3]">{item.year} &bull; {item.type}</p>
+                        <p className="text-sm text-[#b3b3b3]">{item.year} &bull; {item.type}</p>
                       </div>
                     ))}
                   </div>
@@ -554,7 +554,7 @@ const Home = () => {
                 /* Normal Discography Section */
                 <div className="px-7 mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-left">Discography</h2>
+                    <h2 className="text-2xl font-extrabold text-left">Discography</h2>
                     <button
                       onClick={() => { setShowAllFilter(discographyFilter); setShowAllDiscography(true); }}
                       className="text-sm font-bold text-[#b3b3b3] hover:text-white transition-colors"
@@ -602,10 +602,10 @@ const Home = () => {
                                    </div>
                               </div>
                               <div className="flex items-center gap-1.5 mb-0.5 mt-2 min-w-0">
-                                <h3 className="font-semibold text-sm truncate">{item.title}</h3>
+                                <h3 className="font-bold text-[15px] truncate">{item.title}</h3>
                                 <FirstStreamBadge projectId={item.id} />
                               </div>
-                              <p className="text-xs text-[#b3b3b3] line-clamp-2">{item.year} • {item.type}</p>
+                              <p className="text-sm text-[#b3b3b3] line-clamp-2">{item.year} • {item.type}</p>
                           </div>
                        ))}
                   </div>
@@ -615,7 +615,7 @@ const Home = () => {
               {!showAllDiscography &&
               /* About Section */
               <div className="px-7 mt-6 mb-16">
-                <h2 className="text-2xl font-bold mb-4 text-left">About</h2>
+                <h2 className="text-2xl font-extrabold mb-4 text-left">About</h2>
                 <div 
                     onClick={() => setIsGalleryOpen(true)}
                     className="relative w-full h-[600px] rounded-lg bg-cover bg-center overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform duration-300 group"
