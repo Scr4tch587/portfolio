@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { collection, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, serverTimestamp, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from '../../firebase';
 
@@ -126,8 +126,18 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
       if (mode === 'edit' && project?.docId) {
         await updateDoc(doc(db, 'projects', project.docId), payload);
       } else {
+        // Bump all existing projects' orderingPriority by 1 so the new one sits at the top
+        const existingSnapshot = await getDocs(collection(db, 'projects'));
+        const batch = writeBatch(db);
+        existingSnapshot.docs.forEach((existingDoc) => {
+          const current = existingDoc.data().orderingPriority ?? 999;
+          batch.update(doc(db, 'projects', existingDoc.id), { orderingPriority: current + 1 });
+        });
+        await batch.commit();
+
         await setDoc(doc(db, 'projects', projectDocId), {
           ...payload,
+          orderingPriority: 0,
           views: 0,
           createdAt: serverTimestamp(),
           whatsNewAt: serverTimestamp(),
