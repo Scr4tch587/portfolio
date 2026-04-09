@@ -12,7 +12,6 @@ const EMPTY_FORM = {
   year: '',
   type: 'Album',
   duration: '',
-  orderingPriority: '',
   imageUrl: '',
 };
 
@@ -42,7 +41,6 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
         year: project.year ?? '',
         type: project.type || 'Album',
         duration: project.duration || '',
-        orderingPriority: project.orderingPriority ?? '',
         imageUrl: project.imageUrl || '',
       });
       setImageFile(null);
@@ -80,7 +78,6 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
       year: Number(form.year),
       type: form.type,
       duration: form.duration.trim(),
-      orderingPriority: Number(form.orderingPriority),
       imageUrl: form.imageUrl.trim() || null,
     };
   }, [form]);
@@ -89,8 +86,8 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
     event.preventDefault();
     setError('');
 
-    if (!parsedData.title || Number.isNaN(parsedData.year) || Number.isNaN(parsedData.orderingPriority)) {
-      setError('Title, year, and ordering priority are required.');
+    if (!parsedData.title || Number.isNaN(parsedData.year)) {
+      setError('Title and year are required.');
       return;
     }
 
@@ -201,11 +198,6 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
         <label className="flex flex-col gap-1 text-sm">
           Duration (MM:SS)
           <input value={form.duration} onChange={(e) => setForm((prev) => ({ ...prev, duration: e.target.value }))} className="rounded-md border border-white/20 bg-[#0f0f0f] px-3 py-2" />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          Ordering Priority
-          <input type="number" value={form.orderingPriority} onChange={(e) => setForm((prev) => ({ ...prev, orderingPriority: e.target.value }))} className="rounded-md border border-white/20 bg-[#0f0f0f] px-3 py-2" />
         </label>
 
         <label className="md:col-span-2 flex flex-col gap-1 text-sm">

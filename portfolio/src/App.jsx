@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Layout from './components/Layout'
+import LoadingScreen from './components/LoadingScreen'
 import { PlayerProvider } from './context/PlayerContext'
 import Home from './pages/Home'
 
@@ -35,9 +36,11 @@ function App() {
 
   return (
     <PlayerProvider>
-      <Layout>
-        <Home />
-      </Layout>
+      <LoadingScreen>
+        <Layout>
+          <Home />
+        </Layout>
+      </LoadingScreen>
     </PlayerProvider>
   )
 }
