@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { gotoHome, fetchProjects, playerBar, popularRows } from './helpers.js';
+import { gotoHome, fetchProjects, popularRows } from './helpers.js';
 
 test.describe('stream counting', () => {
   test('5s of continuous playback confirms a stream: toast, badge, server count', async ({ page, request }) => {

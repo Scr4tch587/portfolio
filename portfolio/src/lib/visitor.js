@@ -11,7 +11,7 @@ export function getOrCreateVisitorId() {
       }
       localStorage.setItem(key, id);
     }
-  } catch (e) {
+  } catch {
     // localStorage may be unavailable; fallback to a volatile id
     if (!id) id = 'anon-' + Date.now().toString(36);
   }

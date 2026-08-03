@@ -7,7 +7,34 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist']),
   {
+    // CommonJS Node files: Cloud Functions and CJS configs
+    files: ['functions/**/*.js', 'tailwind.config.js', 'postcss.config.cjs'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      globals: globals.node,
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+  {
+    // Node-side tooling: vite config, scripts, Playwright e2e suite
+    files: ['vite.config.js', 'playwright.config.js', 'scripts/**/*.{js,mjs}', 'e2e/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node, ...globals.browser },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+  {
     files: ['**/*.{js,jsx}'],
+    ignores: ['functions/**', 'vite.config.js', 'playwright.config.js', 'scripts/**', 'e2e/**'],
     extends: [
       js.configs.recommended,
       reactHooks.configs['recommended-latest'],

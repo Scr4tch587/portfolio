@@ -12,7 +12,7 @@ export function useMonthlyListeners(pollIntervalMs = 60_000) {
       try {
         const c = await getMonthlyVisitorCount();
         if (mountedRef.current) setCount(c);
-      } catch (e) {
+      } catch {
         // ignore for demo
       }
     }
