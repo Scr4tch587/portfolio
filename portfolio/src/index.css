@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Spotify's exact accent green (#1ed760) replaces Tailwind's default
+   green-500 everywhere the UI parodies Spotify. */
+@theme {
+  --color-green-500: #1ed760;
+}
+
 /* Spotify-inspired font stack */
 body {
   font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';

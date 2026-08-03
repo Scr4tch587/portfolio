@@ -85,7 +85,7 @@ test.describe('player bar', () => {
     await gotoHome(page);
     const rows = popularRows(page);
     const firstRow = rows.first();
-    const rowTitle = await firstRow.locator('span.font-medium.text-base').textContent();
+    const rowTitle = await firstRow.locator('span.font-normal.text-base').textContent();
 
     await firstRow.click();
     const bar = playerBar(page);

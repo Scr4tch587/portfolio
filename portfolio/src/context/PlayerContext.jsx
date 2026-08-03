@@ -493,6 +493,7 @@ export const PlayerProvider = ({ children }) => {
       toggleShuffle,
       playNextProject,
       playPreviousProject,
+      playRandomProject,
       likedSongsOpen,
       openLikedSongs,
       closeLikedSongs,

@@ -59,7 +59,7 @@ test.describe('discography', () => {
 
   test('clicking a discography card plays that project', async ({ page }) => {
     await gotoHome(page);
-    const card = page.locator('.w-\\[170px\\]').first();
+    const card = page.locator('.w-\\[212px\\]').first();
     const cardTitle = (await card.getByRole('heading', { level: 3 }).textContent()).trim();
     await card.click();
     await expect(playerBar(page).locator('span.font-medium.text-sm')).toHaveText(cardTitle);

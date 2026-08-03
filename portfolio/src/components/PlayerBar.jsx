@@ -47,7 +47,7 @@ const PlayerBar = () => {
       
       {/* Left: Project Info */}
       <div className="flex items-center gap-3 w-[30%] min-w-[180px]">
-        <div className="w-12 h-12 bg-[#1c1c1c] rounded-[4px] flex items-center justify-center shrink-0 overflow-hidden">
+        <div className="w-14 h-14 bg-[#1c1c1c] rounded-[4px] flex items-center justify-center shrink-0 overflow-hidden">
              {currentProject?.image ? (
                <img src={currentProject?.image} alt={title} className="w-full h-full object-cover" />
              ) : (
@@ -102,7 +102,7 @@ const PlayerBar = () => {
 
         </div>
         
-        <div className="w-full flex items-center gap-2 text-[11px] text-[#b3b3b3] font-medium">
+        <div className="w-full flex items-center gap-2 text-xs text-[#b3b3b3] font-medium">
           <span className="tabular-nums">{formatTime(currentTime)}</span>
           <button
             type="button"

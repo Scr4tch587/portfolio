@@ -7,7 +7,7 @@ test.describe('stream counting', () => {
 
     const rows = popularRows(page);
     const firstRow = rows.first();
-    const rowTitle = (await firstRow.locator('span.font-medium.text-base').textContent()).trim();
+    const rowTitle = (await firstRow.locator('span.font-normal.text-base').textContent()).trim();
 
     const before = await fetchProjects(request);
     const targetBefore = before.find((p) => p.title === rowTitle);
