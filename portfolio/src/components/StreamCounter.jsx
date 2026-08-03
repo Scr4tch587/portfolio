@@ -1,55 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 /**
- * StreamCounter - Animated counter with scale pop and green glow
- * 
+ * StreamCounter - Animated counter with scale pop and green glow.
+ * Always tracks the `count` prop; animates whenever it changes (whether the
+ * change came from this session's stream or another visitor via onSnapshot).
+ *
  * @param {number} count - The stream count to display
- * @param {boolean} animate - Whether to trigger animation
  */
-const StreamCounter = ({ count, animate }) => {
+const StreamCounter = ({ count }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [displayCount, setDisplayCount] = useState(count);
+  const displayCountRef = useRef(count);
 
   useEffect(() => {
-    if (animate && count !== displayCount) {
-      setIsAnimating(true);
-      
-      // Animate count change
-      const startCount = displayCount;
-      const endCount = count;
-      const duration = 400;
-      const steps = 10;
-      const stepDuration = duration / steps;
-      const increment = (endCount - startCount) / steps;
+    if (count === displayCountRef.current) return undefined;
 
-      let currentStep = 0;
-      const interval = setInterval(() => {
-        currentStep++;
-        if (currentStep >= steps) {
-          setDisplayCount(endCount);
-          clearInterval(interval);
-        } else {
-          setDisplayCount(Math.floor(startCount + increment * currentStep));
-        }
-      }, stepDuration);
+    const startCount = displayCountRef.current;
+    const endCount = count;
+    displayCountRef.current = endCount;
+    setIsAnimating(true);
 
-      // Remove animation classes after animation completes
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 800);
+    const duration = 400;
+    const steps = 10;
+    const stepDuration = duration / steps;
+    const increment = (endCount - startCount) / steps;
 
-      return () => clearInterval(interval);
-    }
-  }, [count, animate, displayCount]);
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        setDisplayCount(endCount);
+        clearInterval(interval);
+      } else {
+        setDisplayCount(Math.floor(startCount + increment * currentStep));
+      }
+    }, stepDuration);
+
+    const glowTimeout = setTimeout(() => setIsAnimating(false), 800);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(glowTimeout);
+      setDisplayCount(endCount);
+    };
+  }, [count]);
 
   // Format number with commas
   const formattedCount = displayCount.toLocaleString();
 
   return (
-    <span 
+    <span
       className={`inline-block transition-all duration-300 ${
-        isAnimating 
-          ? 'stream-counter-animate text-[#1ED760]' 
+        isAnimating
+          ? 'stream-counter-animate text-[#1ED760]'
           : ''
       }`}
       style={{

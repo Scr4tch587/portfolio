@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import Layout from './components/Layout'
 import LoadingScreen from './components/LoadingScreen'
+import MainArea from './components/MainArea'
 import { PlayerProvider } from './context/PlayerContext'
-import Home from './pages/Home'
 
 const ENABLE_MOBILE_UNSUPPORTED_PAGE = true
 
@@ -38,7 +38,7 @@ function App() {
     <PlayerProvider>
       <LoadingScreen>
         <Layout>
-          <Home />
+          <MainArea />
         </Layout>
       </LoadingScreen>
     </PlayerProvider>

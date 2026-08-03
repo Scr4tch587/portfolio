@@ -12,6 +12,8 @@ const RightSidebar = ({ onClose }) => {
   const artist = hasProject ? (currentProject?.artist || 'Kai Zhang') : 'Select a project';
   const visitLabel = hasProject && devpostProjectIds.has(currentProject?.id) ? 'Devpost' : 'Website';
 
+  const showProcessingBanner = hasProject && ['parse_error', 'failed'].includes(currentProject?.processingStatus);
+
   return (
     <div className="hidden lg:flex w-80 bg-[#121212] flex-col p-4 rounded-lg text-white overflow-y-auto custom-scrollbar animate-fade-in-up shrink-0 border border-white/5" style={{ fontFamily: 'Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}>
       <div className="flex justify-between items-center mb-5">
@@ -49,6 +51,11 @@ const RightSidebar = ({ onClose }) => {
       </div>
 
       <div className="bg-[#242424] rounded-md p-4 mb-4 text-left">
+        {showProcessingBanner ? (
+          <div className="mb-4 rounded-md border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+            README failed to process. Showing default view.
+          </div>
+        ) : null}
         <p className="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">
           {hasProject ? (
             (currentProject?.description) || (

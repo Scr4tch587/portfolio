@@ -65,11 +65,16 @@ export const usePlayer = () => useContext(PlayerContext);
 
 export const PlayerProvider = ({ children }) => {
   const [currentProject, setCurrentProject] = useState(null);
+  const [mainView, setMainView] = useState('home');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(0);
   const [streamConfirmedTrigger, setStreamConfirmedTrigger] = useState(0);
-  const [continuousPlayTime, setContinuousPlayTime] = useState(0);
+  // Stream accounting lives in refs, not state: it advances every 50ms tick
+  // and must not re-render every context consumer.
+  const continuousPlayMsRef = useRef(0);
+  const streamArmedRef = useRef(false); // one stream per playthrough
+  const currentProjectIdRef = useRef(null);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [allProjectsList, setAllProjectsList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,6 +94,27 @@ export const PlayerProvider = ({ children }) => {
     return 0;
   };
 
+  const isLyricsProjectReady = (project) => (
+    (project?.processingStatus === 'ready' || project?.processingStatus === 'asset_error')
+    && project?.lyricsEnabled !== false
+    && Number(project?.generatedDurationSec) > 0
+  );
+
+  const getPlaybackDuration = (project) => {
+    if (isLyricsProjectReady(project)) {
+      return Number(project.generatedDurationSec);
+    }
+    return parseDuration(project?.duration);
+  };
+
+  // Same source of truth as playback, formatted for track listings, so the
+  // displayed length always matches what actually plays.
+  const getDisplayDuration = (project) => {
+    const seconds = Math.round(getPlaybackDuration(project));
+    if (!(seconds > 0)) return project?.duration || '0:00';
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  };
+
   const addToRecentlyPlayed = (project) => {
     setRecentlyPlayed((prev) => {
       const filtered = prev.filter((p) => p.id !== project.id);
@@ -103,7 +129,10 @@ export const PlayerProvider = ({ children }) => {
   const openDiscographyAll = () => setDiscographyOpenAllTrigger((prev) => prev + 1);
   const openWhatsNew = () => setWhatsNewOpen(true);
   const closeWhatsNew = () => setWhatsNewOpen(false);
-  const goHome = () => setHomeNavigationTrigger((prev) => prev + 1);
+  const goHome = () => {
+    setMainView('home');
+    setHomeNavigationTrigger((prev) => prev + 1);
+  };
 
   const searchProjects = (query, projects) => {
     if (!query.trim()) return [];
@@ -177,16 +206,26 @@ export const PlayerProvider = ({ children }) => {
 
   const playProject = (project, options = {}) => {
     if (!project) return;
-    const { openSidebar = true } = options;
+    const { openSidebar = true, switchView = true } = options;
     setCurrentProject(project);
+    if (switchView) {
+      setMainView(isLyricsProjectReady(project) ? 'lyrics' : 'home');
+    }
     if (openSidebar) {
       setRightSidebarOpen(true);
     }
     setIsPlaying(true);
     setCurrentTime(0);
-    setContinuousPlayTime(0);
-    setDurationSeconds(parseDuration(project.duration));
+    continuousPlayMsRef.current = 0;
+    streamArmedRef.current = true;
+    currentProjectIdRef.current = project.id;
+    setDurationSeconds(getPlaybackDuration(project));
     addToRecentlyPlayed(project);
+  };
+
+  const seekTo = (seconds) => {
+    const next = Number.isFinite(seconds) ? seconds : 0;
+    setCurrentTime(Math.max(0, Math.min(durationSeconds, next)));
   };
 
   const getPlayableProjects = () => {
@@ -248,30 +287,40 @@ export const PlayerProvider = ({ children }) => {
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
-    if (!isPlaying) {
-        if (currentProject) {
-          setRightSidebarOpen(true);
-        }
-        // Resuming: decided NOT to reset continuous time on resume, 
-        // but the prompt says "continuous 5 seconds". 
-        // If paused, it's not continuous. So resetting on pause/resume or just pause is correct.
-        // Let's reset on PAUSE.
-    } else {
-        setContinuousPlayTime(0);
+    if (!isPlaying && currentProject) {
+      setRightSidebarOpen(true);
     }
   };
 
-  // Ensure continuous timer resets when playback is paused/stopped
+  // Pausing breaks "continuous" — the 5s clock starts over on resume, but the
+  // playthrough stays armed/disarmed as it was.
   useEffect(() => {
     if (!isPlaying) {
-      setContinuousPlayTime(0);
+      continuousPlayMsRef.current = 0;
     }
   }, [isPlaying]);
 
-  const confirmStream = () => {
-    // Reset continuous focus timer so the next stream requires another full 5s
-    setContinuousPlayTime(0);
-    setStreamConfirmedTrigger(prev => prev + 1);
+  // Confirms the single stream for the current playthrough: records
+  // first-ever streams for this browser, then notifies listeners (toast,
+  // badge, Firestore view registration).
+  const registerStreamConfirmed = () => {
+    const id = currentProjectIdRef.current;
+    if (id) {
+      try {
+        const streamed = JSON.parse(localStorage.getItem('streamedProjects') || '[]');
+        if (!streamed.includes(id)) {
+          localStorage.setItem('streamedProjects', JSON.stringify([...streamed, id]));
+          const session = JSON.parse(sessionStorage.getItem('firstStreamsThisSession') || '[]');
+          if (!session.includes(id)) {
+            sessionStorage.setItem('firstStreamsThisSession', JSON.stringify([...session, id]));
+          }
+          window.dispatchEvent(new CustomEvent('streamConfirmed', { detail: { projectId: id } }));
+        }
+      } catch {
+        // Storage unavailable (private mode) — stream still counts.
+      }
+    }
+    setStreamConfirmedTrigger((prev) => prev + 1);
   };
 
   // In-memory liked IDs (reset on reload) — no Firestore persistence by design
@@ -324,7 +373,7 @@ export const PlayerProvider = ({ children }) => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setContinuousPlayTime(0);
+        continuousPlayMsRef.current = 0;
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -345,31 +394,64 @@ export const PlayerProvider = ({ children }) => {
       || fresh.image !== currentProject.image
       || fresh.imageUrl !== currentProject.imageUrl
       || fresh.views !== currentProject.views
+      || fresh.processingStatus !== currentProject.processingStatus
+      || fresh.generatedDurationSec !== currentProject.generatedDurationSec
+      || fresh.lyricsEnabled !== currentProject.lyricsEnabled
       || (fresh.tags || []).join('|') !== (currentProject.tags || []).join('|')
     );
 
     if (fieldsChanged) {
-      setCurrentProject((prev) => (prev && prev.id === fresh.id ? { ...fresh, liked: prev.liked } : prev));
+      setCurrentProject((prev) => {
+        if (!prev || prev.id !== fresh.id) return prev;
+        const nextProject = { ...fresh, liked: prev.liked };
+        setDurationSeconds(getPlaybackDuration(nextProject));
+        // Only react to readiness *transitions* (e.g. processing finished),
+        // not unrelated field changes like another visitor's stream bumping
+        // `views` — those must never yank the visitor out of the home view.
+        const wasReady = isLyricsProjectReady(prev);
+        const nowReady = isLyricsProjectReady(nextProject);
+        if (nowReady && !wasReady && mainView !== 'lyrics') {
+          setMainView('lyrics');
+        } else if (!nowReady && mainView === 'lyrics') {
+          setMainView('home');
+        }
+        return nextProject;
+      });
     }
-  }, [allProjectsList, currentProject]);
+  }, [allProjectsList, currentProject, mainView]);
 
   useEffect(() => {
     let interval = null;
+    let lastTick = performance.now();
     if (isPlaying && durationSeconds > 0) {
-      const updateInterval = 50; // 50ms → 20fps, smoother progress bar
-      // Progress completes in 5 seconds: incrementPerInterval = durationSeconds * 0.20 * (50/1000)
-      const incrementPerInterval = durationSeconds * 0.01; // 0.20 per second * 0.05 seconds
+      const updateInterval = 50;
 
       interval = setInterval(() => {
+        const now = performance.now();
+        const elapsedMs = now - lastTick;
+        lastTick = now;
+        const elapsedSeconds = elapsedMs / 1000;
+
         setCurrentTime((prevTime) => {
-          if (prevTime + incrementPerInterval >= durationSeconds) {
-            return 0; // Loop
+          const nextTime = prevTime + elapsedSeconds;
+          if (nextTime >= durationSeconds) {
+            // Loop = a new playthrough: eligible for one new stream.
+            streamArmedRef.current = true;
+            continuousPlayMsRef.current = 0;
+            return 0;
           }
-          return prevTime + incrementPerInterval;
+          return nextTime;
         });
 
-        // Increment by actual interval duration so stream threshold (5000ms) stays accurate
-        setContinuousPlayTime(prev => prev + updateInterval);
+        // The clock only advances while the tab is visible, and each
+        // playthrough confirms at most one stream after 5 continuous seconds.
+        if (!document.hidden) {
+          continuousPlayMsRef.current += elapsedMs;
+          if (streamArmedRef.current && continuousPlayMsRef.current >= 5000) {
+            streamArmedRef.current = false;
+            registerStreamConfirmed();
+          }
+        }
 
       }, updateInterval);
     } else {
@@ -383,6 +465,10 @@ export const PlayerProvider = ({ children }) => {
       currentProject, 
       setCurrentProject, 
       clearCurrentProjectDelayed,
+      mainView,
+      setMainView,
+      isLyricsProjectReady,
+      getDisplayDuration,
       toggleLike,
       isLiked,
       likedCount,
@@ -391,11 +477,10 @@ export const PlayerProvider = ({ children }) => {
       playProject, 
       togglePlay,
       currentTime,
+      seekTo,
       durationSeconds,
       streamConfirmedTrigger,
       streamCompleteTrigger: streamConfirmedTrigger, // Alias for backward compatibility
-      confirmStream,
-      continuousPlayTime,
       recentlyPlayed,
       allProjectsList,
       setAllProjectsList,

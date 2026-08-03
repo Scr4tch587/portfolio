@@ -24,6 +24,13 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'remark' },
+          { name: 'remark-parse' },
+          { name: 'unified' },
+        ],
+      }],
     },
   },
 ])

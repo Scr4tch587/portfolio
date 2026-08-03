@@ -66,7 +66,7 @@ const SocialsMenu = ({ isOpen, onClose, anchorRef }) => {
         <span>Devpost</span>
       </a>
       <a 
-        href="mailto:k466zhan@uwaterloo.ca" 
+        href="mailto:k466zhang@uwaterloo.ca"
         className="flex items-center gap-3 px-4 py-3 text-sm text-gray-200 hover:bg-[#3e3e3e] transition-colors"
       >
         <Mail size={18} />

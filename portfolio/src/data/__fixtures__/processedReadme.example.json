@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "projectId": "example",
+  "source": {
+    "owner": "example",
+    "repo": "demo",
+    "commitSha": "abcdef123456",
+    "readmePath": "README.md",
+    "branch": "main"
+  },
+  "chunks": [
+    {
+      "id": "c-0001",
+      "type": "heading",
+      "depth": 1,
+      "markdown": "# Demo README",
+      "plainText": "Demo README",
+      "startMs": 0,
+      "endMs": 5000,
+      "durationMs": 5000,
+      "sourceBlockIndex": 0,
+      "sourceLineStart": 1,
+      "sourceLineEnd": 1
+    }
+  ],
+  "timeline": [{ "blockIndex": 0, "startMs": 0, "endMs": 5000, "costMs": 5000 }],
+  "durationSec": 5,
+  "assets": [],
+  "generatedAt": "2026-05-12T00:00:00.000Z",
+  "generatorVersion": "1.0.0",
+  "warnings": []
+}

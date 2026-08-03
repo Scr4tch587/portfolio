@@ -9,6 +9,7 @@ const PlayerBar = () => {
     isPlaying,
     togglePlay,
     currentTime,
+    seekTo,
     durationSeconds,
     toggleLike,
     isLiked,
@@ -16,6 +17,9 @@ const PlayerBar = () => {
     toggleShuffle,
     playNextProject,
     playPreviousProject,
+    mainView,
+    setMainView,
+    isLyricsProjectReady,
   } = usePlayer();
   if (!currentProject) return null;
 
@@ -29,6 +33,14 @@ const PlayerBar = () => {
   const progressPercentage = durationSeconds > 0 ? (currentTime / durationSeconds) * 100 : 0;
   const title = currentProject?.title || '';
   const artist = currentProject?.artist || 'Kai Zhang';
+  const displayedDuration = durationSeconds > 0 ? formatTime(durationSeconds) : (currentProject?.duration || '0:00');
+
+  const handleSeek = (event) => {
+    if (durationSeconds <= 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    seekTo(ratio * durationSeconds);
+  };
 
   return (
     <div className="h-[80px] bg-black border-t border-[#282828] px-4 md:px-5 flex items-center justify-between fixed bottom-0 w-full z-50 text-white animate-fade-in-up">
@@ -92,18 +104,34 @@ const PlayerBar = () => {
         
         <div className="w-full flex items-center gap-2 text-[11px] text-[#b3b3b3] font-medium">
           <span className="tabular-nums">{formatTime(currentTime)}</span>
-          <div className="h-1 bg-[#4d4d4d] rounded-full flex-1 group cursor-pointer hover:h-1.5 transition-all">
+          <button
+            type="button"
+            onClick={handleSeek}
+            className="h-1 flex-1 rounded-full bg-[#4d4d4d] text-left group cursor-pointer hover:h-1.5 transition-all"
+            aria-label="Seek playback"
+          >
              <div className="h-full bg-white rounded-full group-hover:bg-green-500 relative" style={{ width: `${progressPercentage}%`, transition: 'width 50ms linear' }}>
                 <div className="hidden group-hover:block absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg"></div>
              </div>
-          </div>
-          <span className="tabular-nums">{currentProject?.duration || '3:45'}</span>
+          </button>
+          <span className="tabular-nums">{displayedDuration}</span>
         </div>
       </div>
 
       {/* Right: Volume & Extras */}
       <div className="hidden md:flex items-center justify-end gap-2.5 w-[30%] min-w-[180px] text-[#b3b3b3]">
-         <Mic2 size={16} className="hover:text-white cursor-pointer" />
+         <button
+           type="button"
+           onClick={() => {
+             if (!isLyricsProjectReady(currentProject)) return;
+             setMainView(mainView === 'lyrics' ? 'home' : 'lyrics');
+           }}
+           title={isLyricsProjectReady(currentProject) ? 'Lyrics' : 'Lyrics unavailable for this project'}
+           aria-label="Toggle lyrics view"
+           className={isLyricsProjectReady(currentProject) ? 'cursor-pointer' : 'cursor-default opacity-40'}
+         >
+           <Mic2 size={16} className={mainView === 'lyrics' ? 'text-green-500' : 'hover:text-white'} />
+         </button>
          <LayoutList size={16} className="hover:text-white cursor-pointer" />
          <div className="flex items-center gap-2 group">
              <Volume2 size={16} className="hover:text-white cursor-pointer" />

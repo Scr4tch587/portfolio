@@ -13,6 +13,7 @@ const EMPTY_FORM = {
   type: 'Album',
   duration: '',
   imageUrl: '',
+  lyricsEnabled: true,
 };
 
 function sanitizeFileName(name) {
@@ -42,6 +43,7 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
         type: project.type || 'Album',
         duration: project.duration || '',
         imageUrl: project.imageUrl || '',
+        lyricsEnabled: project.lyricsEnabled !== false,
       });
       setImageFile(null);
       setLocalPreviewUrl('');
@@ -79,6 +81,7 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
       type: form.type,
       duration: form.duration.trim(),
       imageUrl: form.imageUrl.trim() || null,
+      lyricsEnabled: Boolean(form.lyricsEnabled),
     };
   }, [form]);
 
@@ -232,6 +235,27 @@ export default function ProjectForm({ mode, project, onCancel, onSaved }) {
           />
           {imageFile && <span className="text-xs text-gray-400">Selected: {imageFile.name}</span>}
         </label>
+
+        <label className="md:col-span-2 flex items-center gap-3 rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-sm">
+          <input
+            type="checkbox"
+            checked={Boolean(form.lyricsEnabled)}
+            onChange={(e) => setForm((prev) => ({ ...prev, lyricsEnabled: e.target.checked }))}
+            className="h-4 w-4 accent-green-500"
+          />
+          <span>Enable lyrics view when a processed README is available</span>
+        </label>
+
+        {mode === 'edit' && project ? (
+          <div className="md:col-span-2 rounded-md border border-white/10 bg-[#101010] px-4 py-3 text-sm text-gray-300">
+            <p>Processing status: <span className="font-medium text-white">{project.processingStatus || 'idle'}</span></p>
+            <p className="mt-1">Manual duration: <span className="font-medium text-white">{project.duration || '—'}</span></p>
+            <p className="mt-1">Generated duration: <span className="font-medium text-white">{project.generatedDurationSec ? `${Math.floor(project.generatedDurationSec / 60)}:${String(project.generatedDurationSec % 60).padStart(2, '0')}` : '—'}</span></p>
+            {project.processedReadmeRef?.commitSha ? (
+              <p className="mt-1">Latest commit: <span className="font-mono text-white">{project.processedReadmeRef.commitSha.slice(0, 7)}</span></p>
+            ) : null}
+          </div>
+        ) : null}
 
         {currentImageUrl && (
           <div className="md:col-span-2">

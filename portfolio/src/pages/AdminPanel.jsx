@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collection, deleteDoc, doc, getDocs, onSnapshot } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { useNavigate } from 'react-router-dom';
 import ProjectForm from '../components/admin/ProjectForm';
 import ProjectList from '../components/admin/ProjectList';
 import { useAdmin } from '../context/AdminContext';
-import { db } from '../firebase';
+import { db, functions } from '../firebase';
 
 function normalizeDocId(rawId) {
   const asNumber = Number.parseInt(rawId, 10);
@@ -20,6 +21,7 @@ export default function AdminPanel() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [deleteError, setDeleteError] = useState('');
   const [deletingProjectId, setDeletingProjectId] = useState(null);
+  const [processingProjectId, setProcessingProjectId] = useState(null);
   const formSectionRef = useRef(null);
 
   const fetchProjects = useCallback(async () => {
@@ -95,6 +97,21 @@ export default function AdminPanel() {
     }
   };
 
+  const handleReprocessProject = async (project) => {
+    if (!project?.docId) return;
+    setDeleteError('');
+    setProcessingProjectId(project.docId);
+    try {
+      const callProcessProjectReadme = httpsCallable(functions, 'processProjectReadme');
+      await callProcessProjectReadme({ projectId: project.docId });
+      await fetchProjects();
+    } catch (error) {
+      setDeleteError(error?.message || 'Failed to queue README processing.');
+    } finally {
+      setProcessingProjectId(null);
+    }
+  };
+
   const tabClass = useMemo(
     () =>
       'rounded-full px-4 py-2 text-sm font-semibold transition-colors border border-white/10 data-[active=true]:bg-white data-[active=true]:text-black data-[active=false]:text-white data-[active=false]:hover:bg-white/10',
@@ -153,7 +170,9 @@ export default function AdminPanel() {
             projects={projects}
             loading={loadingProjects}
             deletingProjectId={deletingProjectId}
+            processingProjectId={processingProjectId}
             onRefresh={fetchProjects}
+            onReprocess={handleReprocessProject}
             onAdd={() => {
               setFormMode('create');
               setSelectedProject(null);

@@ -5,12 +5,10 @@ import LikeButton from '../components/LikeButton';
 import { usePlayer } from '../context/PlayerContext';
 import ImageGalleryModal from '../components/ImageGalleryModal';
 import SocialsMenu from '../components/SocialsMenu';
-import StreamToast from '../components/StreamToast';
 import StreamCounter from '../components/StreamCounter';
 import FirstStreamBadge from '../components/FirstStreamBadge';
 import LikedProjectsCard from '../components/LikedProjectsCard';
 import ArtistPickCard from '../components/ArtistPickCard';
-import { useStreamTracker } from '../hooks/useStreamTracker';
 import { useMonthlyListeners } from '../hooks/useMonthlyListeners';
 import { touchVisitor } from '../lib/visitorMetrics';
 import aboutImage from '../assets/profilephoto1.jpg';
@@ -22,7 +20,7 @@ import waterlooCrest from '../assets/waterloo_logo.webp';
 import sewebring from '../assets/sewebring.svg';
 import SewringMenu from '../components/SewringMenu';
 import { db } from '../firebase';
-import { collection, onSnapshot, doc, setDoc, increment } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 function normalizeDocId(rawId) {
   const parsed = Number.parseInt(rawId, 10);
@@ -42,7 +40,6 @@ const Home = () => {
     currentProject,
     isPlaying,
     togglePlay,
-    streamCompleteTrigger,
     toggleLike,
     isLiked,
     setAllProjectsList,
@@ -50,6 +47,7 @@ const Home = () => {
     discographyOpenAllTrigger,
     rightSidebarOpen,
     homeNavigationTrigger,
+    getDisplayDuration,
   } = usePlayer();
   const [discographyFilter, setDiscographyFilter] = useState('albums');
   const [showAllDiscography, setShowAllDiscography] = useState(false);
@@ -61,16 +59,10 @@ const Home = () => {
   const [isSocialsMenuOpen, setIsSocialsMenuOpen] = useState(false);
   const [isSewringOpen, setIsSewringOpen] = useState(false);
   const [popularLimit, setPopularLimit] = useState(5);
-  const [animatedProjectId, setAnimatedProjectId] = useState(null); // New state for animation
   const [visibleDiscographyCount, setVisibleDiscographyCount] = useState(null);
   const followButtonRef = useRef(null);
   const sewebringButtonRef = useRef(null);
   const discographyRowRef = useRef(null);
-  const lastProcessedStreamTrigger = useRef(0);
-  const currentProjectRef = useRef(currentProject);
-
-  // Stream tracking for currently playing project
-  const streamTracker = useStreamTracker(currentProject?.id);
 
   const galleryImages = [aboutImage, profilePhoto2, profilePhoto4, profilePhoto5];
 
@@ -122,32 +114,11 @@ const Home = () => {
 
     hasAutoSelected.current = true;
     const randomIndex = Math.floor(Math.random() * allProjects.length);
-    playProject(allProjects[randomIndex], { openSidebar: false });
+    // Preload the player bar without stealing the view: no sidebar, no
+    // lyrics-view switch, and stay paused until the visitor presses play.
+    playProject(allProjects[randomIndex], { openSidebar: false, switchView: false });
     setIsPlaying(false);
   }, [allProjects, currentProject, firestoreInitialized, playProject, setIsPlaying]);
-
-  // Keep a ref to currentProject so the stream effect doesn't need it as a dependency.
-  // This prevents the Firestore snapshot → currentProject update → effect re-run loop.
-  useEffect(() => {
-    currentProjectRef.current = currentProject;
-  }, [currentProject]);
-
-  useEffect(() => {
-    if (streamCompleteTrigger > 0 && streamCompleteTrigger !== lastProcessedStreamTrigger.current && firestoreInitialized) {
-      const project = currentProjectRef.current;
-      if (!project) return;
-      lastProcessedStreamTrigger.current = streamCompleteTrigger;
-
-      // Trigger animation immediately (Firestore snapshot will update the count)
-      setAnimatedProjectId(project.id);
-      setTimeout(() => setAnimatedProjectId(null), 500);
-
-      // Write to Firestore — onSnapshot will update the local count automatically
-      const projectRef = doc(db, "projects", String(project.id));
-      setDoc(projectRef, { views: increment(1) }, { merge: true })
-        .catch(err => console.error("Error updating Firestore:", err));
-    }
-  }, [streamCompleteTrigger, firestoreInitialized]);
 
   useEffect(() => {
     const trackMonthlyVisitor = async () => {
@@ -451,10 +422,7 @@ const Home = () => {
                             </div>
                             
                                <div className="hidden md:block">
-                                 <StreamCounter 
-                                   count={project.views} 
-                                   animate={animatedProjectId === project.id}
-                                 />
+                                 <StreamCounter count={project.views} />
                                </div>
                             <span className="flex items-center justify-end gap-4">
                                 <span className={`group-hover:opacity-100 opacity-0 transition-opacity ${isLiked(project.id) ? 'opacity-100' : ''}`}>
@@ -465,7 +433,7 @@ const Home = () => {
                                               size={20}
                                             />
                                 </span>
-                                <span className="text-sm">{project.duration}</span>
+                                <span className="text-sm">{getDisplayDuration(project)}</span>
                             </span>
                         </div>
                     ))}
@@ -643,13 +611,6 @@ const Home = () => {
         onPrev={handlePrevImage}
         onNext={handleNextImage}
       />
-     
-       <StreamToast 
-         show={streamTracker.showToast}
-         onConfirm={streamTracker.confirmStream}
-         countdown={streamTracker.autoConfirmCountdown}
-         isFirstStream={streamTracker.isFirstStream}
-       />
     </div>
   );
 };

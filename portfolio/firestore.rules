@@ -10,6 +10,24 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /projects/{projectId}/processingJobs/{jobId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /processedReadmes/{projectId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /projectGithubIndex/{docId} {
+      allow read, write: if false;
+    }
+
+    match /webhookEvents/{deliveryId} {
+      allow read, write: if false;
+    }
+
     // Public write-only visitor counter with narrow schema validation.
     match /visitors/{visitId} {
       allow read: if false;

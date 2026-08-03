@@ -5,6 +5,7 @@ import PlayerBar from './PlayerBar';
 import TopBar from './TopBar';
 import LeftSidebar from './LeftSidebar';
 import LikedSongsModal from './LikedSongsModal';
+import StreamRegistrar from './StreamRegistrar';
 import WhatsNewMenu from './WhatsNewMenu';
 import { usePlayer } from '../context/PlayerContext';
 
@@ -78,6 +79,7 @@ const Layout = ({ children }) => {
       <PlayerBar />
       <LikedSongsModal />
       <WhatsNewMenu />
+      <StreamRegistrar />
     </div>
   );
 };

@@ -10,13 +10,6 @@ const LikedSongsModal = () => {
     playProject,
   } = usePlayer();
 
-  if (!likedSongsOpen) return null;
-
-  const handleSelectProject = (project) => {
-    playProject(project);
-    closeLikedSongs();
-  };
-
   useEffect(() => {
     if (!likedSongsOpen) return undefined;
     const handleEscape = (event) => {
@@ -25,6 +18,13 @@ const LikedSongsModal = () => {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [likedSongsOpen, closeLikedSongs]);
+
+  if (!likedSongsOpen) return null;
+
+  const handleSelectProject = (project) => {
+    playProject(project);
+    closeLikedSongs();
+  };
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-[2px] flex items-center justify-center p-4" onClick={closeLikedSongs}>
