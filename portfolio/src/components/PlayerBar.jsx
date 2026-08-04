@@ -43,7 +43,7 @@ const PlayerBar = () => {
   };
 
   return (
-    <div className="h-[80px] bg-black border-t border-[#282828] px-4 md:px-5 flex items-center justify-between fixed bottom-0 w-full z-50 text-white animate-fade-in-up">
+    <div className="h-[72px] bg-black px-4 md:px-5 flex items-center justify-between fixed bottom-0 w-full z-50 text-white animate-fade-in-up">
       
       {/* Left: Project Info */}
       <div className="flex items-center gap-3 w-[30%] min-w-[180px]">

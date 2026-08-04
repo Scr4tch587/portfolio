@@ -77,7 +77,7 @@ export async function gotoHome(page) {
 
 /** The player bar (fixed bottom bar) — present once a project is auto-selected. */
 export function playerBar(page) {
-  return page.locator('div.h-\\[80px\\].bg-black.fixed');
+  return page.locator('div.h-\\[72px\\].bg-black.fixed');
 }
 
 export async function loginAsAdmin(page) {

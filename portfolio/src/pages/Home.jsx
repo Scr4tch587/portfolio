@@ -278,13 +278,14 @@ const Home = () => {
         {/* Fade to page bg at the bottom of the image */}
         <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-[#121212] to-transparent"></div>
 
+        {/* Spotify order: name, then verified line, then monthly listeners */}
         <div className="relative z-10">
+            <h1 className="text-5xl md:text-8xl font-extrabold mb-3 tracking-tight">Kai Zhang</h1>
             <div className="flex items-center gap-2 mb-2">
                 <img src={waterlooCrest} alt="University of Waterloo Logo" className="w-5 h-5 object-contain" />
                 <span className="text-sm font-medium">University of Waterloo</span>
             </div>
-            <h1 className="text-5xl md:text-8xl font-extrabold mb-3 tracking-tight">Kai Zhang</h1>
-            <p className="text-base font-medium mb-2">Software Engineering '30</p>
+            <p className="text-base font-normal">Software Engineering '30</p>
         </div>
       </div>}
 

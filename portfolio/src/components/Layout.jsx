@@ -47,8 +47,8 @@ const Layout = ({ children }) => {
   }, [currentProject, togglePlay]);
 
   return (
-    <div className="bg-[#0a0a0a] min-h-screen font-sans text-white flex flex-col h-screen overflow-hidden">
-      <div className="flex flex-1 p-2 gap-2 overflow-hidden pb-[84px]">
+    <div className="bg-black min-h-screen font-sans text-white flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-1 p-2 gap-2 overflow-hidden pb-[80px]">
         <LeftSidebar />
 
         <div className="flex-1 flex flex-col bg-[#121212] rounded-lg overflow-hidden relative">
