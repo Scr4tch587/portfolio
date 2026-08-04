@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SpChevronLeft, SpChevronRight, SpClose } from './icons/SpotifyIcons';
 
 const ImageGalleryModal = ({ isOpen, images, currentImageIndex, onClose, onPrev, onNext }) => {
   if (!isOpen || !images || images.length === 0) {
@@ -19,7 +19,7 @@ const ImageGalleryModal = ({ isOpen, images, currentImageIndex, onClose, onPrev,
         className="absolute top-6 right-6 z-110 text-gray-400 hover:text-white transition-colors p-2"
         aria-label="Close image gallery"
       >
-        <X size={32} />
+        <SpClose size={28} />
       </button>
 
       {/* Navigation Arrows */}
@@ -30,14 +30,14 @@ const ImageGalleryModal = ({ isOpen, images, currentImageIndex, onClose, onPrev,
             className="absolute left-4 md:left-8 z-110 text-gray-400 hover:text-white transition-colors p-2 bg-black/20 rounded-full hover:bg-black/40"
             aria-label="Previous image"
           >
-            <ChevronLeft size={48} />
+            <SpChevronLeft size={36} />
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onNext(); }} 
             className="absolute right-4 md:right-8 z-110 text-gray-400 hover:text-white transition-colors p-2 bg-black/20 rounded-full hover:bg-black/40"
             aria-label="Next image"
           >
-            <ChevronRight size={48} />
+            <SpChevronRight size={36} />
           </button>
         </>
       )}

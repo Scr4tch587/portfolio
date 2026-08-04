@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Bell, House, LayoutGrid, Play, Search, User } from 'lucide-react';
+import { User } from 'lucide-react';
+import { SpBell, SpBrowse, SpHome, SpPlay, SpSearchGlyph } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 import SearchOverlay from './SearchOverlay';
 
@@ -52,7 +53,7 @@ const TopBar = ({ scrollY }) => {
           aria-label="Play a random project"
           tabIndex={showCompactHeader ? 0 : -1}
         >
-          <Play size={20} fill="black" className="ml-0.5 text-black" />
+          <SpPlay size={20} className="text-black" />
         </button>
         <span className="text-2xl font-bold truncate max-w-[220px]">Kai Zhang</span>
       </div>
@@ -64,7 +65,7 @@ const TopBar = ({ scrollY }) => {
           className="w-12 h-12 rounded-full bg-[#1f1f1f] hover:bg-[#2a2a2a] hover:scale-105 transition-all flex items-center justify-center text-[#b3b3b3] hover:text-white shrink-0"
           aria-label="Home"
         >
-          <House size={22} />
+          <SpHome size={24} />
         </button>
 
         <div className="flex-1 relative">
@@ -75,7 +76,7 @@ const TopBar = ({ scrollY }) => {
               className="relative group text-gray-400 hover:text-white shrink-0"
               aria-label="Search"
             >
-              <Search size={18} />
+              <SpSearchGlyph size={20} />
               <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                 Search
               </span>
@@ -96,7 +97,7 @@ const TopBar = ({ scrollY }) => {
               className="relative group text-gray-400 hover:text-white shrink-0"
               aria-label="Open all discography"
             >
-              <LayoutGrid size={18} />
+              <SpBrowse size={20} />
               <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                 Explore
               </span>
@@ -121,7 +122,7 @@ const TopBar = ({ scrollY }) => {
             className="hover:text-white"
             aria-label="What's new"
           >
-            <Bell size={17} />
+            <SpBell size={16} />
           </button>
           <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             What&apos;s new

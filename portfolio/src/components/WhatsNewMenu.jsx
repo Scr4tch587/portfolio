@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Play, X } from 'lucide-react';
+import { SpClose, SpPlay } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
@@ -109,7 +109,7 @@ const WhatsNewMenu = () => {
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-white text-4xl leading-tight tracking-tight font-black">What&apos;s New</h2>
             <button type="button" onClick={closeWhatsNew} className="text-gray-400 hover:text-white" aria-label="Close what's new">
-              <X size={20} />
+              <SpClose size={18} />
             </button>
           </div>
           <p className="mt-2.5 text-base text-[#a7a7a7] leading-relaxed">Latest updates from me.</p>
@@ -171,7 +171,7 @@ const WhatsNewMenu = () => {
                     aria-label={`Play ${item.title}`}
                     onClick={() => handlePlayFromMenu(item.source)}
                   >
-                    <Play size={24} fill="currentColor" className="ml-0.5" />
+                    <SpPlay size={24} />
                   </button>
                 </div>
               </div>

@@ -4,20 +4,44 @@
    green-500 everywhere the UI parodies Spotify. */
 @theme {
   --color-green-500: #1ed760;
+  --font-sans: 'SpotifyMixUI', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
-/* Spotify-inspired font stack */
+/* Spotify's actual fonts, hotlinked from their CORS-open CDN (encore.scdn.co).
+   Figtree remains the fallback if the CDN is unreachable. */
+@font-face {
+  font-family: 'SpotifyMixUI';
+  src: url('https://encore.scdn.co/fonts/SpotifyMixUI-Regular-76c92fb1a35c462f73429fa8865163eb.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SpotifyMixUI';
+  src: url('https://encore.scdn.co/fonts/SpotifyMixUI-Bold-09c45a3a0ce9d2971e62cb26e97760fb.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SpotifyMixUITitle';
+  src: url('https://encore.scdn.co/fonts/SpotifyMixUITitleVariable-08bab3354d40f74e5177917b5ae80894.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
-  font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
-  letter-spacing: -0.01em;
+  font-family: 'SpotifyMixUI', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  /* Spotify Mix carries its own metrics — no tracking compensation needed */
+  letter-spacing: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3,
-b, strong,
-.font-bold, .font-extrabold, .font-black, .font-semibold {
-  letter-spacing: -0.03em;
+/* Spotify renders headings/display text in SpotifyMixUITitle */
+h1, h2, h3 {
+  font-family: 'SpotifyMixUITitle', 'SpotifyMixUI', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
 }
 
 /* Stream counter animations */

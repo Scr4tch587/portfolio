@@ -1,5 +1,6 @@
 import React from 'react';
-import { Heart, Library, Play, Volume2 } from 'lucide-react';
+import { Heart } from 'lucide-react';
+import { SpLibrary, SpPlay, SpVolume } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 import squareLogo from '../assets/square_logo.png';
 
@@ -17,7 +18,7 @@ const LeftSidebar = () => {
         className="w-12 h-12 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1f1f1f]"
         aria-label="Library"
       >
-        <Library size={20} />
+        <SpLibrary size={20} />
       </button>
 
       <div className="w-8 h-px bg-[#282828] my-2" />
@@ -37,11 +38,11 @@ const LeftSidebar = () => {
               >
                 <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors flex items-center justify-center">
-                  <Play size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" fill="currentColor" />
+                  <SpPlay size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 {isActiveAndPlaying && (
                   <div className="absolute inset-0 rounded bg-black/60 flex items-center justify-center">
-                    <Volume2 size={30} className="text-green-500" />
+                    <SpVolume size={26} className="text-green-500" />
                   </div>
                 )}
               </button>

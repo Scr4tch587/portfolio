@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { SpClose } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
@@ -15,11 +15,11 @@ const RightSidebar = ({ onClose }) => {
   const showProcessingBanner = hasProject && ['parse_error', 'failed'].includes(currentProject?.processingStatus);
 
   return (
-    <div className="hidden lg:flex w-80 bg-[#121212] flex-col p-4 rounded-lg text-white overflow-y-auto custom-scrollbar animate-fade-in-up shrink-0 border border-white/5" style={{ fontFamily: 'Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}>
+    <div className="hidden lg:flex w-80 bg-[#121212] flex-col p-4 rounded-lg text-white overflow-y-auto custom-scrollbar animate-fade-in-up shrink-0 border border-white/5">
       <div className="flex justify-between items-center mb-5">
         <span className="font-bold text-base text-left">{title}</span>
         <button type="button" onClick={onClose} aria-label="Close details">
-          <X className="text-gray-400 hover:text-white cursor-pointer" size={20} />
+          <SpClose className="text-gray-400 hover:text-white cursor-pointer" size={18} />
         </button>
       </div>
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import { SpClose } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 
 const LikedSongsModal = () => {
@@ -35,7 +35,7 @@ const LikedSongsModal = () => {
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <h3 className="text-white text-xl font-bold">Liked Songs</h3>
           <button type="button" onClick={closeLikedSongs} className="text-gray-400 hover:text-white" aria-label="Close liked songs">
-            <X size={20} />
+            <SpClose size={18} />
           </button>
         </div>
 

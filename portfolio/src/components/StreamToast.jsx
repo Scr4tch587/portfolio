@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Play } from 'lucide-react';
+import { SpPlay } from './icons/SpotifyIcons';
 
 /**
  * StreamToast - Non-blocking, purely informational toast above the PlayerBar.
@@ -35,7 +35,7 @@ const StreamToast = ({ show }) => {
     <div className="fixed inset-x-0 bottom-28 flex justify-center z-[60] pointer-events-none">
       <div className={`pointer-events-auto ${containerClass}`}>
         <div className="bg-[#282828] text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3">
-          <Play size={16} className="text-green-500 shrink-0" fill="currentColor" />
+          <SpPlay size={16} className="text-green-500 shrink-0" />
           <span className="text-sm font-medium">Project streamed!</span>
         </div>
       </div>

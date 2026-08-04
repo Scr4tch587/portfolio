@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, MoreHorizontal, Heart, Pause, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { SpPlay, SpPause, SpChevronLeft, SpChevronDown, SpChevronUp } from '../components/icons/SpotifyIcons';
 import SecondaryCapsuleButton from '../components/SecondaryCapsuleButton';
 import LikeButton from '../components/LikeButton';
 import { usePlayer } from '../context/PlayerContext';
@@ -280,7 +280,7 @@ const Home = () => {
 
         {/* Spotify order: name, then verified line, then monthly listeners */}
         <div className="relative z-10">
-            <h1 className="text-5xl md:text-8xl font-extrabold mb-3 tracking-tight">Kai Zhang</h1>
+            <h1 className="text-5xl md:text-8xl font-extrabold mb-3">Kai Zhang</h1>
             <div className="flex items-center gap-2 mb-2">
                 <img src={waterlooCrest} alt="University of Waterloo Logo" className="w-5 h-5 object-contain" />
                 <span className="text-sm font-medium">University of Waterloo</span>
@@ -302,7 +302,7 @@ const Home = () => {
                     onClick={handlePlayRandom}
                     className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 transition-transform focus:outline-none"
                 >
-                  <Play size={24} fill="black" className="ml-0.5 text-black" />
+                  <SpPlay size={24} className="text-black" />
                 </button>
                 {/* Capsule group: LinkedIn / GitHub / Resume */}
                 <div className="flex items-center gap-3 ml-6 mr-4">
@@ -395,9 +395,9 @@ const Home = () => {
                             {/* Animated Equalizer or Play/Pause Icon on Hover/Active */}
                             <div className={`hidden group-hover:block ${isCurrent(project) && isPlaying ? 'block' : ''}`}>
                                {isCurrent(project) && isPlaying ? (
-                                   <Pause size={16} fill="currentColor" className="text-green-500" />
+                                   <SpPause size={16} className="text-green-500" />
                                ) : (
-                                   <Play size={16} fill="white" className="text-white" />
+                                   <SpPlay size={16} className="text-white" />
                                )}
                             </div>
                             {/* Fallback for when playing but not hovering - handled by conditional above logic roughly, but simplicity key here */}
@@ -459,7 +459,7 @@ const Home = () => {
                         onClick={() => { setShowAllDiscography(false); setShowAllDropdownOpen(false); }}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 transition-colors"
                       >
-                        <ArrowLeft size={20} className="text-white" />
+                        <SpChevronLeft size={18} className="text-white" />
                       </button>
                       <h2 className="text-2xl font-bold text-left">Discography</h2>
                     </div>
@@ -470,7 +470,7 @@ const Home = () => {
                         className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors"
                       >
                         {showAllFilterLabel}
-                        {showAllDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        {showAllDropdownOpen ? <SpChevronUp size={14} /> : <SpChevronDown size={14} />}
                       </button>
                       {showAllDropdownOpen && (
                         <div className="absolute right-0 top-full mt-2 bg-[#282828] rounded-md shadow-xl py-1 z-50 min-w-[160px]">
@@ -507,7 +507,7 @@ const Home = () => {
                             item.title[0]
                           )}
                           <div className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                            <Play size={24} fill="black" className="ml-0.5 text-black" />
+                            <SpPlay size={24} className="text-black" />
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 mt-2 min-w-0">
@@ -567,7 +567,7 @@ const Home = () => {
                                   ) : (
                                       item.title[0]
                                   )}                                 <div className="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                                      <Play size={24} fill="black" className="ml-0.5 text-black" />
+                                      <SpPlay size={24} className="text-black" />
                                    </div>
                               </div>
                               <div className="flex items-center gap-1.5 mb-0.5 mt-2 min-w-0">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Mic2, LayoutList, Volume2, Maximize2 } from 'lucide-react';
+import { SpPlay, SpPause, SpSkipBack, SpSkipForward, SpRepeat, SpShuffle, SpLyrics, SpQueue, SpVolume, SpFullscreen } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
@@ -73,10 +73,10 @@ const PlayerBar = () => {
       <div className="flex flex-col items-center max-w-[40%] w-full gap-1.5">
         <div className="flex items-center gap-4">
           <button type="button" onClick={toggleShuffle} aria-label={isShuffleOn ? 'Disable shuffle' : 'Enable shuffle'}>
-            <Shuffle size={16} className={`${isShuffleOn ? 'text-green-500' : 'text-gray-400'} hover:text-white cursor-pointer`} />
+            <SpShuffle size={16} className={`${isShuffleOn ? 'text-green-500' : 'text-[#b3b3b3]'} hover:text-white cursor-pointer`} />
           </button>
           <button type="button" onClick={playPreviousProject} aria-label="Previous project">
-            <SkipBack size={18} className="text-gray-400 hover:text-white cursor-pointer" fill="currentColor" />
+            <SpSkipBack size={16} className="text-[#b3b3b3] hover:text-white cursor-pointer" />
           </button>
           
           <button
@@ -84,18 +84,18 @@ const PlayerBar = () => {
             onClick={togglePlay}
           >
             {isPlaying ? (
-               <Pause size={16} fill="black" className="text-black" />
+               <SpPause size={16} className="text-black" />
             ) : (
-               <Play size={16} fill="black" className="text-black ml-0.5" />
+               <SpPlay size={16} className="text-black" />
             )}
           </button>
           
           <button type="button" onClick={playNextProject} aria-label="Next project">
-            <SkipForward size={18} className="text-gray-400 hover:text-white cursor-pointer" fill="currentColor" />
+            <SpSkipForward size={16} className="text-[#b3b3b3] hover:text-white cursor-pointer" />
           </button>
           
           <div className="relative flex items-center justify-center">
-            <Repeat size={16} className="text-green-500 cursor-pointer" />
+            <SpRepeat size={16} className="text-green-500 cursor-pointer" />
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
             <span className="absolute -top-1 right-0 text-[8px] font-bold text-black bg-green-500 rounded-full w-3 h-3 flex items-center justify-center">1</span>
           </div>
@@ -130,16 +130,16 @@ const PlayerBar = () => {
            aria-label="Toggle lyrics view"
            className={isLyricsProjectReady(currentProject) ? 'cursor-pointer' : 'cursor-default opacity-40'}
          >
-           <Mic2 size={16} className={mainView === 'lyrics' ? 'text-green-500' : 'hover:text-white'} />
+           <SpLyrics size={16} className={mainView === 'lyrics' ? 'text-green-500' : 'hover:text-white'} />
          </button>
-         <LayoutList size={16} className="hover:text-white cursor-pointer" />
+         <SpQueue size={16} className="hover:text-white cursor-pointer" />
          <div className="flex items-center gap-2 group">
-             <Volume2 size={16} className="hover:text-white cursor-pointer" />
+             <SpVolume size={16} className="hover:text-white cursor-pointer" />
              <div className="w-24 h-1 bg-[#4d4d4d] rounded-full cursor-pointer overflow-hidden">
                 <div className="w-2/3 h-full bg-white group-hover:bg-green-500"></div>
              </div>
          </div>
-         <Maximize2 size={16} className="hover:text-white cursor-pointer" />
+         <SpFullscreen size={16} className="hover:text-white cursor-pointer" />
       </div>
 
     </div>
