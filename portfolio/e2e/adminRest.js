@@ -21,14 +21,16 @@ const PROJECT_ID = env.VITE_FIREBASE_PROJECT_ID;
 const CALLABLE_URL = `https://us-central1-${PROJECT_ID}.cloudfunctions.net/adminIssueToken`;
 
 let cachedIdToken = null;
+let cachedCustomToken = null;
 
 /**
- * Passphrase -> custom token (adminIssueToken callable) -> Firebase ID token
- * with the admin claim, for direct Firestore REST writes from Node.
- * Counts one attempt against the admin login rate limit; cached per run.
+ * Passphrase -> admin custom token via the adminIssueToken callable. The UI
+ * is Google-only now; tests sign in by handing this token to the page's
+ * DEV-only __testSignInWithCustomToken hook. Counts one attempt against the
+ * admin login rate limit; cached per run.
  */
-export async function getAdminIdToken(request) {
-  if (cachedIdToken) return cachedIdToken;
+export async function getAdminCustomToken(request) {
+  if (cachedCustomToken) return cachedCustomToken;
 
   const callableRes = await request.post(CALLABLE_URL, {
     headers: { 'Content-Type': 'application/json' },
@@ -40,7 +42,15 @@ export async function getAdminIdToken(request) {
   const callableBody = await callableRes.json();
   const customToken = callableBody?.result?.token;
   if (!customToken) throw new Error('adminIssueToken returned no token');
+  cachedCustomToken = customToken;
+  return customToken;
+}
 
+/** Admin Firebase ID token for direct Firestore REST writes from Node. */
+export async function getAdminIdToken(request) {
+  if (cachedIdToken) return cachedIdToken;
+
+  const customToken = await getAdminCustomToken(request);
   const signInRes = await request.post(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${API_KEY}`,
     { data: { token: customToken, returnSecureToken: true } },

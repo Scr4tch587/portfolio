@@ -1,22 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { fetchProjects, loginAsAdmin, sortByPriority, ADMIN_PASSPHRASE } from './helpers.js';
+import { fetchProjects, loginAsAdmin, sortByPriority } from './helpers.js';
 import { deleteProjectDoc, restoreOrderingPriorities } from './adminRest.js';
 
 const TEST_PROJECT_TITLE = 'E2E TEST PROJECT (auto-delete)';
 
 test.describe('dev login', () => {
-  test('empty passphrase shows validation error without calling the server', async ({ page }) => {
+  test('shows the Google sign-in gate', async ({ page }) => {
     await page.goto('/dev');
     await expect(page.getByRole('heading', { name: 'Developer Login' })).toBeVisible();
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText('Passphrase is required.')).toBeVisible();
-  });
-
-  test('wrong passphrase shows invalid error', async ({ page }) => {
-    await page.goto('/dev');
-    await page.getByLabel('Passphrase').fill('definitely-wrong-passphrase');
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText(/Invalid passphrase|Too many attempts/)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeEnabled();
   });
 
   test('unauthenticated /dev/admin redirects to /dev', async ({ page }) => {
@@ -34,7 +26,7 @@ test.describe('admin panel', () => {
     const before = await fetchProjects(request);
     const prioritySnapshot = new Map(before.map((p) => [p.docId, p.orderingPriority]));
 
-    await loginAsAdmin(page);
+    await loginAsAdmin(page, request);
 
     // Project list shows live projects
     const sorted = sortByPriority(before);
@@ -115,10 +107,8 @@ test.describe('admin panel', () => {
     await expect(page.getByRole('heading', { name: 'Developer Login' })).toBeVisible({ timeout: 15_000 });
   });
 
-  test('authenticated /dev redirects straight to admin panel', async ({ page }) => {
-    // Relies on the Firebase session persisting in this fresh context? No —
-    // fresh context per test, so this logs in again via the UI.
-    await loginAsAdmin(page);
+  test('authenticated /dev redirects straight to admin panel', async ({ page, request }) => {
+    await loginAsAdmin(page, request);
     await page.goto('/dev');
     await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible({ timeout: 15_000 });
   });

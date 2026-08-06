@@ -1,10 +1,10 @@
 import { Navigate } from 'react-router-dom';
-import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function RequireAuth({ children }) {
-  const { authed, isAdmin, loading } = useAdmin();
+  const { user, isAdmin, authReady } = useAuth();
 
-  if (loading) {
+  if (!authReady) {
     return (
       <div className="min-h-screen bg-[#090909] text-white flex items-center justify-center">
         <p className="text-sm text-gray-400">Checking admin session...</p>
@@ -12,7 +12,7 @@ export default function RequireAuth({ children }) {
     );
   }
 
-  if (!authed || !isAdmin) {
+  if (!user || !isAdmin) {
     return <Navigate to="/dev" replace />;
   }
 

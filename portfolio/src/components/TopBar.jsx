@@ -1,6 +1,7 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { User } from 'lucide-react';
 import { SpBell, SpBrowse, SpHome, SpPlay, SpSearchGlyph } from './icons/SpotifyIcons';
+import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import SearchOverlay from './SearchOverlay';
 
@@ -17,8 +18,34 @@ const TopBar = ({ scrollY }) => {
     goHome,
   } = usePlayer();
 
+  const { user, signInWithGoogle, signOutUser } = useAuth();
   const [focused, setFocused] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const searchInputRef = useRef(null);
+  const accountMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return undefined;
+    const handleClickOutside = (event) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountMenuOpen]);
+
+  const handleAccountClick = async () => {
+    if (user) {
+      setAccountMenuOpen((prev) => !prev);
+      return;
+    }
+    try {
+      await signInWithGoogle();
+    } catch {
+      // Popup dismissed or blocked — stay signed out silently.
+    }
+  };
 
   const results = useMemo(
     () => searchProjects(searchQuery, allProjectsList),
@@ -131,19 +158,40 @@ const TopBar = ({ scrollY }) => {
       </div>
 
       <div className="shrink-0">
-        <div className="relative group">
+        <div className="relative group" ref={accountMenuRef}>
           <button
             type="button"
+            onClick={handleAccountClick}
             className="w-12 h-12 rounded-full bg-[#1f1f1f] hover:bg-[#2a2a2a] hover:scale-105 transition-all flex items-center justify-center text-gray-300 hover:text-white"
-            aria-label="Profile"
+            aria-label={user ? 'Account menu' : 'Sign in with Google'}
           >
-            <span className="w-8 h-8 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-center">
-              <User size={16} />
+            <span className="w-8 h-8 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-center overflow-hidden">
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+              ) : (
+                <User size={16} />
+              )}
             </span>
           </button>
-          <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Coming Soon
-          </span>
+          {!accountMenuOpen && (
+            <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              {user ? user.displayName || user.email : 'Sign in with Google'}
+            </span>
+          )}
+          {accountMenuOpen && user && (
+            <div className="absolute top-full right-0 mt-2 w-48 rounded-md bg-[#282828] shadow-xl py-1 z-50">
+              <button
+                type="button"
+                onClick={async () => {
+                  setAccountMenuOpen(false);
+                  await signOutUser();
+                }}
+                className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

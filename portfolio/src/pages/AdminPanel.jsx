@@ -4,7 +4,7 @@ import { httpsCallable } from 'firebase/functions';
 import { useNavigate } from 'react-router-dom';
 import ProjectForm from '../components/admin/ProjectForm';
 import ProjectList from '../components/admin/ProjectList';
-import { useAdmin } from '../context/AdminContext';
+import { useAuth } from '../context/AuthContext';
 import { db, functions } from '../firebase';
 
 function normalizeDocId(rawId) {
@@ -14,7 +14,7 @@ function normalizeDocId(rawId) {
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const { logout } = useAdmin();
+  const { signOutUser } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [formMode, setFormMode] = useState('create');
@@ -126,7 +126,7 @@ export default function AdminPanel() {
           <button
             type="button"
             onClick={async () => {
-              await logout();
+              await signOutUser();
               navigate('/dev', { replace: true });
             }}
             className="rounded-md border border-white/25 px-3 py-2 text-xs font-semibold text-white"

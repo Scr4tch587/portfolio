@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import App from './App.jsx';
 import RequireAuth from './components/admin/RequireAuth';
-import { AdminProvider } from './context/AdminContext';
+import { AuthProvider } from './context/AuthContext';
 import './index.css';
 import AdminPanel from './pages/AdminPanel';
 import DevLogin from './pages/DevLogin';
@@ -11,7 +11,7 @@ import DevLogin from './pages/DevLogin';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <AdminProvider>
+      <AuthProvider>
         <Routes>
           <Route path="/dev" element={<DevLogin />} />
           <Route
@@ -24,7 +24,7 @@ createRoot(document.getElementById('root')).render(
           />
           <Route path="/*" element={<App />} />
         </Routes>
-      </AdminProvider>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 );

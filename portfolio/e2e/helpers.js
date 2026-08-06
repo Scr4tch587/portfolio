@@ -80,9 +80,16 @@ export function playerBar(page) {
   return page.locator('div.h-\\[72px\\].bg-black.fixed');
 }
 
-export async function loginAsAdmin(page) {
+/**
+ * Sign in as the admin. The dev page is Google-only (popups can't be
+ * automated), so tests mint an admin custom token via the adminIssueToken
+ * callable and hand it to the app's DEV-only sign-in hook.
+ */
+export async function loginAsAdmin(page, request) {
+  const { getAdminCustomToken } = await import('./adminRest.js');
+  const token = await getAdminCustomToken(request);
   await page.goto('/dev');
-  await page.getByLabel('Passphrase').fill(ADMIN_PASSPHRASE);
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.waitForFunction(() => typeof window.__testSignInWithCustomToken === 'function');
+  await page.evaluate((t) => window.__testSignInWithCustomToken(t), token);
   await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible({ timeout: 30_000 });
 }
