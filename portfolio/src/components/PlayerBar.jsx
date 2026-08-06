@@ -1,5 +1,5 @@
-import React from 'react';
-import { SpPlay, SpPause, SpSkipBack, SpSkipForward, SpRepeat, SpShuffle, SpLyrics, SpQueue, SpVolume, SpFullscreen } from './icons/SpotifyIcons';
+import React, { useEffect, useState } from 'react';
+import { SpPlay, SpPause, SpSkipBack, SpSkipForward, SpRepeat, SpShuffle, SpLyrics, SpQueue, SpFullscreen } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
@@ -20,8 +20,26 @@ const PlayerBar = () => {
     mainView,
     setMainView,
     isLyricsProjectReady,
+    rightSidebarOpen,
+    toggleRightSidebar,
   } = usePlayer();
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const handleChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', handleChange);
+    return () => document.removeEventListener('fullscreenchange', handleChange);
+  }, []);
+
   if (!currentProject) return null;
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  };
 
   const formatTime = (seconds) => {
     const roundedSeconds = Math.round(seconds);
@@ -94,8 +112,11 @@ const PlayerBar = () => {
             <SpSkipForward size={16} className="text-[#b3b3b3] hover:text-white cursor-pointer" />
           </button>
           
-          <div className="relative flex items-center justify-center">
-            <SpRepeat size={16} className="text-green-500 cursor-pointer" />
+          <div
+            className="relative flex items-center justify-center"
+            title="Always on repeat — every full playthrough counts a new stream"
+          >
+            <SpRepeat size={16} className="text-green-500" />
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
             <span className="absolute -top-1 right-0 text-[8px] font-bold text-black bg-green-500 rounded-full w-3 h-3 flex items-center justify-center">1</span>
           </div>
@@ -132,14 +153,22 @@ const PlayerBar = () => {
          >
            <SpLyrics size={16} className={mainView === 'lyrics' ? 'text-green-500' : 'hover:text-white'} />
          </button>
-         <SpQueue size={16} className="hover:text-white cursor-pointer" />
-         <div className="flex items-center gap-2 group">
-             <SpVolume size={16} className="hover:text-white cursor-pointer" />
-             <div className="w-24 h-1 bg-[#4d4d4d] rounded-full cursor-pointer overflow-hidden">
-                <div className="w-2/3 h-full bg-white group-hover:bg-green-500"></div>
-             </div>
-         </div>
-         <SpFullscreen size={16} className="hover:text-white cursor-pointer" />
+         <button
+           type="button"
+           onClick={toggleRightSidebar}
+           title="Now playing view"
+           aria-label="Toggle now playing view"
+         >
+           <SpQueue size={16} className={rightSidebarOpen ? 'text-green-500 cursor-pointer' : 'hover:text-white cursor-pointer'} />
+         </button>
+         <button
+           type="button"
+           onClick={toggleFullscreen}
+           title={isFullscreen ? 'Exit full screen' : 'Full screen'}
+           aria-label={isFullscreen ? 'Exit full screen' : 'Enter full screen'}
+         >
+           <SpFullscreen size={16} className={isFullscreen ? 'text-green-500 cursor-pointer' : 'hover:text-white cursor-pointer'} />
+         </button>
       </div>
 
     </div>
