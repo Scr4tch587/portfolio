@@ -5,6 +5,10 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.admin == true;
     }
 
+    function signedIn() {
+      return request.auth != null;
+    }
+
     match /projects/{projectId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -38,9 +42,136 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Function-managed brute-force limiter. No client access.
+    // Function-managed brute-force limiters. No client access.
     match /_adminRateLimits/{docId} {
       allow read, write: if false;
+    }
+
+    match /_msgRateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // ---- Accounts ----
+
+    function validUserDoc() {
+      return request.resource.data.keys().hasOnly(
+               ['username', 'usernameLower', 'displayName', 'photoURL', 'bio', 'createdAt'])
+        && request.resource.data.username is string
+        && request.resource.data.username.size() >= 3
+        && request.resource.data.username.size() <= 20
+        && request.resource.data.usernameLower is string
+        && request.resource.data.usernameLower == request.resource.data.username.lower()
+        && request.resource.data.usernameLower.matches('^[a-z0-9_]{3,20}$')
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 60
+        && (request.resource.data.photoURL == null
+            || (request.resource.data.photoURL is string
+                && request.resource.data.photoURL.size() <= 1024))
+        && request.resource.data.bio is string
+        && request.resource.data.bio.size() <= 280
+        && request.resource.data.createdAt is timestamp;
+    }
+
+    match /users/{uid} {
+      allow read: if true; // profiles are public
+      allow create, update: if signedIn() && request.auth.uid == uid && validUserDoc();
+      allow delete: if signedIn() && request.auth.uid == uid; // account self-cleanup
+
+      match /likes/{projectId} {
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        // update allowed so merging session likes into an account is
+        // idempotent (re-setting an existing like refreshes createdAt).
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt is timestamp
+          && projectId.size() > 0 && projectId.size() <= 128;
+      }
+
+      match /blocks/{blockedUid} {
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        allow create: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt is timestamp;
+      }
+    }
+
+    // Username uniqueness reservations; claimed in a transaction with the
+    // users/{uid} write. Immutable (renames would need an atomic callable).
+    match /usernames/{name} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        && name.matches('^[a-z0-9_]{3,20}$');
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid; // frees the name on account cleanup
+    }
+
+    // ---- Playlists ----
+
+    function validPlaylist() {
+      return request.resource.data.keys().hasOnly(
+               ['ownerUid', 'ownerUsername', 'name', 'description', 'projectIds',
+                'visibility', 'createdAt', 'updatedAt'])
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUsername is string
+        && request.resource.data.ownerUsername.size() <= 20
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 300
+        && request.resource.data.projectIds is list
+        && request.resource.data.projectIds.size() <= 200
+        && request.resource.data.visibility in ['public', 'unlisted', 'private']
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /playlists/{playlistId} {
+      // Unlisted = reachable by link (doc id), so single-doc gets allow it;
+      // list queries must be scoped to the owner or to visibility == 'public'.
+      allow get: if resource.data.visibility in ['public', 'unlisted']
+        || (signedIn() && request.auth.uid == resource.data.ownerUid);
+      allow list: if (signedIn() && request.auth.uid == resource.data.ownerUid)
+        || resource.data.visibility == 'public';
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && validPlaylist();
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.ownerUid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && validPlaylist();
+      allow delete: if signedIn() && request.auth.uid == resource.data.ownerUid;
+    }
+
+    // ---- Direct messages (function-written; clients read only) ----
+
+    // Admin read/write allows moderation and cleanup from the dev window.
+    match /conversations/{convId} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid in resource.data.participants);
+      allow write: if isAdmin();
+
+      match /messages/{msgId} {
+        allow read: if isAdmin() || (signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants);
+        allow write: if isAdmin();
+      }
+    }
+
+    match /messageReports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(
+             ['convId', 'messageId', 'reason', 'reporterUid', 'createdAt'])
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.convId is string
+        && request.resource.data.messageId is string
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 500
+        && request.resource.data.createdAt is timestamp;
+      allow update: if false;
+      allow delete: if isAdmin();
     }
   }
 }

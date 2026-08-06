@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SpPlay, SpPause, SpChevronLeft, SpChevronDown, SpChevronUp } from '../components/icons/SpotifyIcons';
+import { SpPlay, SpPause, SpChevronLeft, SpChevronDown, SpChevronUp, SpMore } from '../components/icons/SpotifyIcons';
+import AddToPlaylistMenu from '../components/AddToPlaylistMenu';
 import SecondaryCapsuleButton from '../components/SecondaryCapsuleButton';
 import LikeButton from '../components/LikeButton';
 import { usePlayer } from '../context/PlayerContext';
@@ -57,6 +58,7 @@ const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSocialsMenuOpen, setIsSocialsMenuOpen] = useState(false);
   const [isSewringOpen, setIsSewringOpen] = useState(false);
+  const [playlistMenuProject, setPlaylistMenuProject] = useState(null);
   const [popularLimit, setPopularLimit] = useState(5);
   const [visibleDiscographyCount, setVisibleDiscographyCount] = useState(null);
   const followButtonRef = useRef(null);
@@ -433,6 +435,17 @@ const Home = () => {
                                             />
                                 </span>
                                 <span className="text-sm">{getDisplayDuration(project)}</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPlaylistMenuProject(project);
+                                  }}
+                                  aria-label="Add to playlist"
+                                  className="group-hover:opacity-100 opacity-0 transition-opacity text-[#b3b3b3] hover:text-white"
+                                >
+                                  <SpMore size={16} />
+                                </button>
                             </span>
                         </div>
                     ))}
@@ -600,13 +613,18 @@ const Home = () => {
           </div>
       </div>
 
-      <ImageGalleryModal 
+      <ImageGalleryModal
         isOpen={isGalleryOpen}
         images={galleryImages}
         currentImageIndex={currentImageIndex}
         onClose={() => setIsGalleryOpen(false)}
         onPrev={handlePrevImage}
         onNext={handleNextImage}
+      />
+      <AddToPlaylistMenu
+        project={playlistMenuProject}
+        isOpen={Boolean(playlistMenuProject)}
+        onClose={() => setPlaylistMenuProject(null)}
       />
     </div>
   );

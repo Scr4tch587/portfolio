@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { SpClose } from './icons/SpotifyIcons';
+import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 
 const LikedSongsModal = () => {
+  const { user, signInWithGoogle } = useAuth();
   const {
     likedSongsOpen,
     closeLikedSongs,
@@ -40,6 +42,15 @@ const LikedSongsModal = () => {
         </div>
 
         <div className="p-3 overflow-y-auto custom-scrollbar max-h-[calc(80vh-72px)]">
+          {!user && (
+            <button
+              type="button"
+              onClick={() => signInWithGoogle().catch(() => {})}
+              className="w-full text-left px-4 py-2.5 mb-1 rounded-md bg-white/5 hover:bg-white/10 text-sm text-[#b3b3b3] hover:text-white transition-colors"
+            >
+              Sign in to save your Liked Songs across visits
+            </button>
+          )}
           {likedProjects.length === 0 ? (
             <p className="text-gray-400 text-sm p-4">No liked songs yet.</p>
           ) : (

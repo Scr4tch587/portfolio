@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from './AuthContext';
 
 const PlayerContext = createContext();
 
@@ -64,8 +67,12 @@ const expandToken = (token) => TOKEN_TO_GROUP[token] || [token];
 export const usePlayer = () => useContext(PlayerContext);
 
 export const PlayerProvider = ({ children }) => {
+  const { user } = useAuth();
   const [currentProject, setCurrentProject] = useState(null);
+  // 'home' | 'lyrics' | 'profile' | 'playlist' | 'messages'
   const [mainView, setMainView] = useState('home');
+  // Parameters for the non-home views: { username?, playlistId?, convId?, toUsername? }
+  const [viewParams, setViewParams] = useState({});
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(0);
@@ -132,6 +139,18 @@ export const PlayerProvider = ({ children }) => {
   const goHome = () => {
     setMainView('home');
     setHomeNavigationTrigger((prev) => prev + 1);
+  };
+  const openProfile = (username) => {
+    setViewParams({ username });
+    setMainView('profile');
+  };
+  const openPlaylist = (playlistId) => {
+    setViewParams({ playlistId });
+    setMainView('playlist');
+  };
+  const openMessages = (params = {}) => {
+    setViewParams(params);
+    setMainView('messages');
   };
 
   const searchProjects = (query, projects) => {
@@ -206,7 +225,10 @@ export const PlayerProvider = ({ children }) => {
 
   const playProject = (project, options = {}) => {
     if (!project) return;
-    const { openSidebar = true, switchView = true } = options;
+    const { openSidebar = true, switchView = true, keepQueue = false } = options;
+    // Playing outside an active queue (e.g. a home row) returns next/prev to
+    // the full catalog.
+    if (!keepQueue) setPlayQueue(null);
     setCurrentProject(project);
     if (switchView) {
       setMainView(isLyricsProjectReady(project) ? 'lyrics' : 'home');
@@ -228,9 +250,20 @@ export const PlayerProvider = ({ children }) => {
     setCurrentTime(Math.max(0, Math.min(durationSeconds, next)));
   };
 
+  // Optional queue override: while set (e.g. playing a playlist), next/prev/
+  // shuffle draw from this list instead of the full catalog.
+  const [playQueue, setPlayQueue] = useState(null);
+
   const getPlayableProjects = () => {
+    if (playQueue && playQueue.length > 0) return playQueue;
     if (allProjectsList.length > 0) return allProjectsList;
     return currentProject ? [currentProject] : [];
+  };
+
+  const playFromQueue = (projects, startProject = null) => {
+    if (!Array.isArray(projects) || projects.length === 0) return;
+    setPlayQueue(projects);
+    playProject(startProject || projects[0], { keepQueue: true });
   };
 
   const playRandomProject = () => {
@@ -306,23 +339,70 @@ export const PlayerProvider = ({ children }) => {
     setStreamConfirmedTrigger((prev) => prev + 1);
   };
 
-  // In-memory liked IDs (reset on reload) — no Firestore persistence by design
+  // Liked IDs: in-memory for signed-out visitors (session only), mirrored to
+  // users/{uid}/likes for signed-in users so likes survive reload.
   const [likedIds, setLikedIds] = useState(() => new Set());
+  const likedIdsRef = useRef(likedIds);
+  likedIdsRef.current = likedIds;
+
+  // Firestore doc ids are strings; project ids in app state are numbers when
+  // numeric (same normalization the admin panel uses).
+  const normalizeProjectId = (rawId) => {
+    const asNumber = Number.parseInt(rawId, 10);
+    return Number.isNaN(asNumber) ? rawId : asNumber;
+  };
+
+  useEffect(() => {
+    if (!user) {
+      setLikedIds(new Set());
+      return undefined;
+    }
+    // Merge likes gathered while signed out into the account, then mirror.
+    const pending = [...likedIdsRef.current];
+    if (pending.length > 0) {
+      const batch = writeBatch(db);
+      pending.forEach((id) => {
+        batch.set(
+          doc(db, 'users', user.uid, 'likes', String(id)),
+          { createdAt: serverTimestamp() },
+          { merge: true },
+        );
+      });
+      batch.commit().catch(() => {});
+    }
+    const unsubscribe = onSnapshot(
+      collection(db, 'users', user.uid, 'likes'),
+      (snapshot) => {
+        setLikedIds(new Set(snapshot.docs.map((likeDoc) => normalizeProjectId(likeDoc.id))));
+      },
+      () => {},
+    );
+    return () => unsubscribe();
+  }, [user]);
 
   const toggleLike = (projectId) => {
     if (!projectId && !currentProject) return;
     const id = projectId || currentProject.id;
-    setLikedIds(prev => {
+    const willLike = !likedIdsRef.current.has(id);
+
+    if (user) {
+      const likeRef = doc(db, 'users', user.uid, 'likes', String(id));
+      (willLike
+        ? setDoc(likeRef, { createdAt: serverTimestamp() })
+        : deleteDoc(likeRef)
+      ).catch(() => {});
+    }
+
+    // Optimistic local update; for signed-in users the snapshot confirms it.
+    setLikedIds((prev) => {
       const next = new Set(prev);
-      const willLike = !next.has(id);
       if (willLike) next.add(id);
       else next.delete(id);
-
-      // Keep currentProject.liked in sync with the in-memory Set
-      setCurrentProject(prevProj => prevProj && prevProj.id === id ? { ...prevProj, liked: willLike } : prevProj);
-
       return next;
     });
+    setCurrentProject((prevProj) => (
+      prevProj && prevProj.id === id ? { ...prevProj, liked: willLike } : prevProj
+    ));
   };
 
   const isLiked = (projectId) => {
@@ -488,6 +568,12 @@ export const PlayerProvider = ({ children }) => {
       closeWhatsNew,
       homeNavigationTrigger,
       goHome,
+      viewParams,
+      openProfile,
+      openPlaylist,
+      openMessages,
+      playQueue,
+      playFromQueue,
     }}>
       {children}
     </PlayerContext.Provider>

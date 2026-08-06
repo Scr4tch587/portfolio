@@ -7,6 +7,7 @@ setGlobalOptions({
 
 module.exports = {
   ...require('./src/admin'),
+  ...require('./src/messages'),
   ...require('./src/registerStream'),
   ...require('./src/readme/processProjectReadme'),
   ...require('./src/readme/registerWebhook'),

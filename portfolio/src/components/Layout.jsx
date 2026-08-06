@@ -6,6 +6,8 @@ import TopBar from './TopBar';
 import LeftSidebar from './LeftSidebar';
 import LikedSongsModal from './LikedSongsModal';
 import StreamRegistrar from './StreamRegistrar';
+import UsernameModal from './UsernameModal';
+import HashRouter from './HashRouter';
 import WhatsNewMenu from './WhatsNewMenu';
 import { usePlayer } from '../context/PlayerContext';
 
@@ -80,6 +82,8 @@ const Layout = ({ children }) => {
       <LikedSongsModal />
       <WhatsNewMenu />
       <StreamRegistrar />
+      <UsernameModal />
+      <HashRouter />
     </div>
   );
 };

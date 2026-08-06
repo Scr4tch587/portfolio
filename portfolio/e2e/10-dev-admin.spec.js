@@ -22,6 +22,13 @@ test.describe('admin panel', () => {
   test('login, project list, create/edit/delete round-trip with cleanup', async ({ page, request }) => {
     test.setTimeout(240_000);
 
+    // Pre-clean any stray test docs an aborted earlier run left behind —
+    // duplicate titles make the row locators ambiguous and hang the run.
+    const stale = (await fetchProjects(request)).filter((p) => p.title === TEST_PROJECT_TITLE);
+    for (const doc of stale) {
+      await deleteProjectDoc(request, doc.docId).catch(() => {});
+    }
+
     // Snapshot ordering priorities before any mutation.
     const before = await fetchProjects(request);
     const prioritySnapshot = new Map(before.map((p) => [p.docId, p.orderingPriority]));
@@ -51,9 +58,14 @@ test.describe('admin panel', () => {
       // New project appears in the list
       await expect(page.getByText(TEST_PROJECT_TITLE).first()).toBeVisible({ timeout: 20_000 });
 
-      const afterCreate = await fetchProjects(request);
-      const created = afterCreate.find((p) => p.title === TEST_PROJECT_TITLE);
-      expect(created).toBeTruthy();
+      // The UI shows the doc from Firestore's optimistic local write; poll
+      // until the server commit is visible over REST.
+      let created;
+      await expect.poll(async () => {
+        const afterCreate = await fetchProjects(request);
+        created = afterCreate.find((p) => p.title === TEST_PROJECT_TITLE);
+        return Boolean(created);
+      }, { timeout: 20_000 }).toBe(true);
       createdDocId = created.docId;
       expect(created.orderingPriority).toBe(0);
       expect(created.views).toBe(0);

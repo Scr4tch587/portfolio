@@ -1,11 +1,20 @@
 import React from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, ListMusic } from 'lucide-react';
 import { SpLibrary, SpPlay, SpVolume } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
+import { useMyPlaylists } from '../hooks/usePlaylists';
 import squareLogo from '../assets/square_logo.png';
 
 const LeftSidebar = () => {
-  const { recentlyPlayed, currentProject, isPlaying, playProject, likedCount, openLikedSongs, openDiscographyAll, goHome } = usePlayer();
+  const { recentlyPlayed, currentProject, isPlaying, playProject, likedCount, openLikedSongs, openDiscographyAll, goHome, openPlaylist, allProjectsList } = usePlayer();
+  const { playlists } = useMyPlaylists();
+
+  const playlistCover = (playlist) => {
+    const firstId = (playlist.projectIds || [])[0];
+    if (firstId == null) return null;
+    const project = allProjectsList.find((p) => String(p.id) === String(firstId));
+    return project?.image || null;
+  };
 
   return (
     <aside className="hidden md:flex w-[72px] bg-[#121212] rounded-lg p-2 flex-col gap-1 items-center overflow-y-auto custom-scrollbar shrink-0">
@@ -53,6 +62,36 @@ const LeftSidebar = () => {
           );
         })}
       </div>
+
+      {playlists.length > 0 && (
+        <>
+          <div className="w-8 h-px bg-[#282828] my-2" />
+          <div className="flex flex-col gap-2 items-center">
+            {playlists.map((playlist) => {
+              const cover = playlistCover(playlist);
+              return (
+                <div key={playlist.id} className="relative group">
+                  <button
+                    type="button"
+                    onClick={() => openPlaylist(playlist.id)}
+                    className="w-12 h-12 rounded overflow-hidden shrink-0 relative cursor-pointer transition-transform duration-150 hover:scale-105 ring-1 ring-white/10 hover:ring-white/30 bg-[#282828] flex items-center justify-center text-gray-400"
+                    aria-label={playlist.name}
+                  >
+                    {cover ? (
+                      <img src={cover} alt={playlist.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <ListMusic size={18} />
+                    )}
+                  </button>
+                  <div className="sidebar-tooltip pointer-events-none opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#282828] px-2 py-1 rounded text-xs text-white whitespace-nowrap z-50">
+                    {playlist.name}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       <div className="mt-auto" />
 

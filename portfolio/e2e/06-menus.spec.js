@@ -70,9 +70,9 @@ test.describe('menus and modals', () => {
     await expect(page.getByText('1 / 4')).toBeHidden();
   });
 
-  test('profile button shows a Coming Soon tooltip on hover', async ({ page }) => {
+  test('signed-out account button offers Google sign-in on hover', async ({ page }) => {
     await gotoHome(page);
-    await page.getByRole('button', { name: 'Profile' }).hover();
-    await expect(page.getByText('Coming Soon')).toBeVisible();
+    await page.getByRole('button', { name: 'Sign in with Google' }).hover();
+    await expect(page.getByText('Sign in with Google', { exact: true })).toBeVisible();
   });
 });

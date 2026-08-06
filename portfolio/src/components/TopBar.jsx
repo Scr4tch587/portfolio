@@ -3,6 +3,8 @@ import { User } from 'lucide-react';
 import { SpBell, SpBrowse, SpHome, SpPlay, SpSearchGlyph } from './icons/SpotifyIcons';
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
+import { useMyProfile } from '../hooks/useUserProfile';
+import { useConversations } from '../hooks/useConversations';
 import SearchOverlay from './SearchOverlay';
 
 const TopBar = ({ scrollY }) => {
@@ -16,9 +18,13 @@ const TopBar = ({ scrollY }) => {
     openDiscographyAll,
     openWhatsNew,
     goHome,
+    openProfile,
+    openMessages,
   } = usePlayer();
 
   const { user, signInWithGoogle, signOutUser } = useAuth();
+  const { profile } = useMyProfile();
+  const { unreadCount } = useConversations();
   const [focused, setFocused] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const searchInputRef = useRef(null);
@@ -172,6 +178,9 @@ const TopBar = ({ scrollY }) => {
                 <User size={16} />
               )}
             </span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-green-500 rounded-full ring-2 ring-black" aria-label={`${unreadCount} unread conversations`} />
+            )}
           </button>
           {!accountMenuOpen && (
             <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -180,6 +189,33 @@ const TopBar = ({ scrollY }) => {
           )}
           {accountMenuOpen && user && (
             <div className="absolute top-full right-0 mt-2 w-48 rounded-md bg-[#282828] shadow-xl py-1 z-50">
+              {profile?.username && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    openProfile(profile.username);
+                  }}
+                  className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10"
+                >
+                  Profile
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setAccountMenuOpen(false);
+                  openMessages({});
+                }}
+                className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10 flex items-center justify-between"
+              >
+                Messages
+                {unreadCount > 0 && (
+                  <span className="min-w-4 h-4 px-1 bg-green-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
               <button
                 type="button"
                 onClick={async () => {
