@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { gotoHome, fetchProjects, popularRows } from './helpers.js';
 
 test.describe('stream counting', () => {
-  test('5s of continuous playback confirms a stream: toast, badge, server count', async ({ page, request }) => {
+  test('5s of continuous playback confirms a stream: toast and server count', async ({ page, request }) => {
     await gotoHome(page);
 
     const rows = popularRows(page);
@@ -17,15 +17,6 @@ test.describe('stream counting', () => {
 
     // Toast appears once the 5s continuous threshold passes
     await expect(page.getByText('Project streamed!')).toBeVisible({ timeout: 12_000 });
-
-    // Lyrics-ready projects switch to lyrics view; return home to see the row
-    if (await page.getByRole('heading', { name: 'Kai Zhang', level: 1 }).isHidden()) {
-      await page.getByRole('button', { name: 'Toggle lyrics view' }).click();
-      await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeVisible();
-    }
-
-    // First-listen badge appears for this session (fresh context = first ever)
-    await expect(firstRow.getByText('First listen')).toBeVisible({ timeout: 5_000 });
 
     // Server-side views increment lands back via onSnapshot; poll Firestore
     await expect.poll(async () => {

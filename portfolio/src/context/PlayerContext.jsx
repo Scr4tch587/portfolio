@@ -300,26 +300,9 @@ export const PlayerProvider = ({ children }) => {
     }
   }, [isPlaying]);
 
-  // Confirms the single stream for the current playthrough: records
-  // first-ever streams for this browser, then notifies listeners (toast,
-  // badge, Firestore view registration).
+  // Confirms the single stream for the current playthrough and notifies
+  // listeners (toast, Firestore view registration).
   const registerStreamConfirmed = () => {
-    const id = currentProjectIdRef.current;
-    if (id) {
-      try {
-        const streamed = JSON.parse(localStorage.getItem('streamedProjects') || '[]');
-        if (!streamed.includes(id)) {
-          localStorage.setItem('streamedProjects', JSON.stringify([...streamed, id]));
-          const session = JSON.parse(sessionStorage.getItem('firstStreamsThisSession') || '[]');
-          if (!session.includes(id)) {
-            sessionStorage.setItem('firstStreamsThisSession', JSON.stringify([...session, id]));
-          }
-          window.dispatchEvent(new CustomEvent('streamConfirmed', { detail: { projectId: id } }));
-        }
-      } catch {
-        // Storage unavailable (private mode) — stream still counts.
-      }
-    }
     setStreamConfirmedTrigger((prev) => prev + 1);
   };
 

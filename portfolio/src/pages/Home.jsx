@@ -6,7 +6,6 @@ import { usePlayer } from '../context/PlayerContext';
 import ImageGalleryModal from '../components/ImageGalleryModal';
 import SocialsMenu from '../components/SocialsMenu';
 import StreamCounter from '../components/StreamCounter';
-import FirstStreamBadge from '../components/FirstStreamBadge';
 import LikedProjectsCard from '../components/LikedProjectsCard';
 import ArtistPickCard from '../components/ArtistPickCard';
 import { useMonthlyListeners } from '../hooks/useMonthlyListeners';
@@ -418,7 +417,6 @@ const Home = () => {
                                 </div>
                                  <div className="flex items-center gap-2 min-w-0 flex-1">
                                    <span className="font-normal text-base truncate">{project.title}</span>
-                                   <FirstStreamBadge projectId={project.id} />
                                  </div>
                             </div>
                             
@@ -512,7 +510,6 @@ const Home = () => {
                         </div>
                         <div className="flex items-center gap-1.5 mt-2 min-w-0">
                           <h3 className="font-medium text-base truncate">{item.title}</h3>
-                          <FirstStreamBadge projectId={item.id} />
                         </div>
                         <p className="text-sm text-[#b3b3b3]">{item.year} &bull; {item.type}</p>
                       </div>
@@ -572,7 +569,6 @@ const Home = () => {
                               </div>
                               <div className="flex items-center gap-1.5 mb-0.5 mt-2 min-w-0">
                                 <h3 className="font-medium text-base truncate">{item.title}</h3>
-                                <FirstStreamBadge projectId={item.id} />
                               </div>
                               <p className="text-sm text-[#b3b3b3] line-clamp-2">{item.year} • {item.type}</p>
                           </div>
