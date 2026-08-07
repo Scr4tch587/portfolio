@@ -69,8 +69,12 @@ const TopBar = ({ scrollY }) => {
     }
     try {
       await signInWithGoogle();
-    } catch {
-      // Popup dismissed or blocked — stay signed out silently.
+    } catch (signInError) {
+      const code = String(signInError?.code || '');
+      if (!code.includes('popup-closed-by-user') && !code.includes('cancelled-popup-request')) {
+        // Real failures (unauthorized domain, popup blocked) must not vanish.
+        console.error('Google sign-in failed:', signInError);
+      }
     }
   };
 
