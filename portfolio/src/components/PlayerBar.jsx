@@ -88,15 +88,16 @@ const PlayerBar = () => {
       {/* Center: Controls */}
       <div className="flex flex-col items-center max-w-[40%] w-full gap-1.5">
         <div className="flex items-center gap-4">
-          <button type="button" onClick={toggleShuffle} aria-label={isShuffleOn ? 'Disable shuffle' : 'Enable shuffle'}>
+          <button type="button" onClick={toggleShuffle} className="p-2 -m-2" aria-label={isShuffleOn ? 'Disable shuffle' : 'Enable shuffle'}>
             <SpShuffle size={16} className={`${isShuffleOn ? 'text-green-500' : 'text-[#b3b3b3]'} hover:text-white cursor-pointer`} />
           </button>
-          <button type="button" onClick={playPreviousProject} aria-label="Previous project">
+          <button type="button" onClick={playPreviousProject} className="p-2 -m-2" aria-label="Previous project">
             <SpSkipBack size={16} className="text-[#b3b3b3] hover:text-white cursor-pointer" />
           </button>
-          
+
+          {/* after: pseudo extends the clickable area ~8px past the visible circle */}
           <button
-            className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform active:scale-95 focus:outline-none"
+            className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform active:scale-95 focus:outline-none relative after:absolute after:-inset-2 after:content-['']"
             onClick={togglePlay}
           >
             {isPlaying ? (
@@ -105,8 +106,8 @@ const PlayerBar = () => {
                <SpPlay size={16} className="text-black" />
             )}
           </button>
-          
-          <button type="button" onClick={playNextProject} aria-label="Next project">
+
+          <button type="button" onClick={playNextProject} className="p-2 -m-2" aria-label="Next project">
             <SpSkipForward size={16} className="text-[#b3b3b3] hover:text-white cursor-pointer" />
           </button>
           
