@@ -20,7 +20,8 @@ const GITHUB_API_TOKEN = defineSecret('GITHUB_API_TOKEN');
 // 4.0.0: sentence/list-item/table-row chunks; duration derived from content
 // weights instead of being scaled to the manually entered MM:SS.
 // 4.1.0: image chunks carry intrinsic dimensions; height-aware image weights.
-const GENERATOR_VERSION = '4.1.0';
+// 4.2.0: raw HTML <img> tags convert to markdown images before parsing.
+const GENERATOR_VERSION = '4.2.0';
 
 function assertAdmin(request) {
   if (request.auth?.token?.admin !== true) {

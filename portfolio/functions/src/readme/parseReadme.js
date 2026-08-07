@@ -21,6 +21,19 @@ function collectImageRefs(node, refs) {
   }
 }
 
+// GitHub READMEs commonly embed screenshots as raw HTML <img> tags (the
+// drag-and-drop upload flow emits them). remark parses those as opaque html
+// nodes the chunker drops, so rewrite them to markdown image syntax and let
+// the normal image pipeline (caching, sizing, chunking) handle them.
+function htmlImagesToMarkdown(source) {
+  return source.replace(/<img\b[^>]*?\/?>(?:\s*<\/img>)?/gi, (tag) => {
+    const src = tag.match(/\bsrc\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (!src) return '';
+    const alt = (tag.match(/\balt\s*=\s*["']([^"']*)["']/i)?.[1] || '').replace(/[[\]]/g, '');
+    return `![${alt}](${src})`;
+  });
+}
+
 function parseReadmeMarkdown(markdown) {
   const warnings = [];
   let source = String(markdown || '');
@@ -29,6 +42,8 @@ function parseReadmeMarkdown(markdown) {
     source = Buffer.from(source, 'utf8').subarray(0, MAX_SOURCE_BYTES).toString('utf8');
     warnings.push('README exceeded 500 KB and was truncated.');
   }
+
+  source = htmlImagesToMarkdown(source);
 
   const tree = unified().use(remarkParse).use(remarkGfm).parse(source);
   const imageRefs = [];

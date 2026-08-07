@@ -50,6 +50,18 @@ test.describe('deep-link image loading', () => {
         () => cover.evaluate((img) => img.naturalWidth),
         { timeout: 15_000 },
       ).toBeGreaterThan(0);
+
+      // Play Waypost -> lyrics/README view. Its README embeds screenshots as
+      // raw HTML <img> tags; the pipeline must surface them as image chunks
+      // (cached in Storage) and they must decode in the lyrics view.
+      await page.getByRole('button', { name: 'Play Waypost' }).click();
+      const readmeImage = page.locator('.lyric-image img').first();
+      await expect(readmeImage).toBeAttached({ timeout: 20_000 });
+      await readmeImage.scrollIntoViewIfNeeded();
+      await expect.poll(
+        () => readmeImage.evaluate((img) => img.naturalWidth),
+        { timeout: 15_000 },
+      ).toBeGreaterThan(0);
     } finally {
       await deleteDocPath(request, user.idToken, `playlists/${playlistId}`).catch(() => {});
       await deleteDocPath(request, user.idToken, `users/${user.uid}`).catch(() => {});
