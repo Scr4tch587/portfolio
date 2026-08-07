@@ -12,7 +12,11 @@ const make = (viewBox, inner) => {
       fill="currentColor"
       aria-hidden="true"
       className={className}
-      style={style}
+      // Icons are decorative and live inside buttons; without this, a press
+      // that starts on a glyph path can lose its click when the 50ms playback
+      // tick re-renders and replaces the path mid-press (Chrome then never
+      // composes the click event).
+      style={{ pointerEvents: 'none', ...style }}
       dangerouslySetInnerHTML={{ __html: inner }}
       {...rest}
     />
