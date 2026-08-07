@@ -19,20 +19,6 @@ import herobackground from '../assets/herobackground.jpg';
 import waterlooCrest from '../assets/waterloo_logo.webp';
 import sewebring from '../assets/sewebring.svg';
 import SewringMenu from '../components/SewringMenu';
-import { db } from '../firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
-
-function normalizeDocId(rawId) {
-  const parsed = Number.parseInt(rawId, 10);
-  return Number.isNaN(parsed) ? rawId : parsed;
-}
-
-function withResolvedImage(project) {
-  return {
-    ...project,
-    image: project.imageUrl || null,
-  };
-}
 
 const Home = () => {
   const {
@@ -42,7 +28,8 @@ const Home = () => {
     togglePlay,
     toggleLike,
     isLiked,
-    setAllProjectsList,
+    allProjectsList,
+    projectsLoaded,
     setIsPlaying,
     discographyOpenAllTrigger,
     rightSidebarOpen,
@@ -67,46 +54,12 @@ const Home = () => {
 
   const galleryImages = [aboutImage, profilePhoto2, profilePhoto4, profilePhoto5];
 
-  // Combine all project types for view tracking
-  const [allProjects, setAllProjects] = useState([]); // Initialize as empty array
-  const [firestoreInitialized, setFirestoreInitialized] = useState(false);
+  // The catalog is subscribed at the provider level (PlayerContext).
+  const allProjects = allProjectsList;
+  const firestoreInitialized = projectsLoaded;
   const hasAutoSelected = useRef(false);
   const monthlyVisitorCount = useMonthlyListeners();
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, 'projects'),
-      (projectsSnapshot) => {
-        const firestoreProjects = projectsSnapshot.docs.map((projectDoc) => ({
-          docId: projectDoc.id,
-          id: normalizeDocId(projectDoc.id),
-          ...projectDoc.data(),
-        }));
-
-        const mergedProjects = firestoreProjects
-          .map((firestoreProject) =>
-            withResolvedImage({
-              ...firestoreProject,
-              github: firestoreProject.github ?? '',
-              website: firestoreProject.website ?? '',
-              tags: Array.isArray(firestoreProject.tags) ? firestoreProject.tags : [],
-              views: Number.isFinite(firestoreProject.views) ? firestoreProject.views : 0,
-            }),
-          )
-          .filter((project) => project.title)
-          .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
-
-        setAllProjects(mergedProjects);
-        setAllProjectsList(mergedProjects);
-        setFirestoreInitialized(true);
-      },
-      (error) => {
-        console.error('Error fetching projects:', error);
-      },
-    );
-
-    return () => unsubscribe();
-  }, [setAllProjectsList]);
 
   useEffect(() => {
     if (!firestoreInitialized || allProjects.length === 0 || currentProject || hasAutoSelected.current) {

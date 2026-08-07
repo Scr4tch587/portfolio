@@ -84,6 +84,46 @@ export const PlayerProvider = ({ children }) => {
   const currentProjectIdRef = useRef(null);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [allProjectsList, setAllProjectsList] = useState([]);
+  const [projectsLoaded, setProjectsLoaded] = useState(false);
+
+  // Firestore doc ids are strings; app project ids are numbers when numeric
+  // (same normalization the admin panel uses).
+  const normalizeProjectId = (rawId) => {
+    const asNumber = Number.parseInt(rawId, 10);
+    return Number.isNaN(asNumber) ? rawId : asNumber;
+  };
+
+  // The catalog subscription lives at the provider level (not in Home) so
+  // deep-linked views (playlist/profile) and the loading screen have data
+  // even when Home never mounts.
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'projects'),
+      (snapshot) => {
+        const projects = snapshot.docs
+          .map((projectDoc) => {
+            const data = projectDoc.data();
+            return {
+              docId: projectDoc.id,
+              id: normalizeProjectId(projectDoc.id),
+              ...data,
+              github: data.github ?? '',
+              website: data.website ?? '',
+              tags: Array.isArray(data.tags) ? data.tags : [],
+              views: Number.isFinite(data.views) ? data.views : 0,
+              image: data.imageUrl || null,
+            };
+          })
+          .filter((project) => project.title)
+          .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+        setAllProjectsList(projects);
+        setProjectsLoaded(true);
+      },
+      () => {},
+    );
+    return () => unsubscribe();
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [isShuffleOn, setIsShuffleOn] = useState(false);
@@ -345,13 +385,6 @@ export const PlayerProvider = ({ children }) => {
   const likedIdsRef = useRef(likedIds);
   likedIdsRef.current = likedIds;
 
-  // Firestore doc ids are strings; project ids in app state are numbers when
-  // numeric (same normalization the admin panel uses).
-  const normalizeProjectId = (rawId) => {
-    const asNumber = Number.parseInt(rawId, 10);
-    return Number.isNaN(asNumber) ? rawId : asNumber;
-  };
-
   useEffect(() => {
     if (!user) {
       setLikedIds(new Set());
@@ -547,6 +580,7 @@ export const PlayerProvider = ({ children }) => {
       recentlyPlayed,
       allProjectsList,
       setAllProjectsList,
+      projectsLoaded,
       searchQuery,
       setSearchQuery,
       searchProjects,

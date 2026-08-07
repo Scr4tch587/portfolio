@@ -73,10 +73,12 @@ test.describe('discography', () => {
     await page.keyboard.press('Escape');
   });
 
-  test('left sidebar library button opens show-all view', async ({ page }) => {
+  test('left sidebar new-playlist button opens the create dialog', async ({ page }) => {
     await gotoHome(page);
-    await page.getByRole('button', { name: 'Library' }).click();
-    await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeHidden();
+    await page.getByRole('complementary').getByRole('button', { name: 'New playlist' }).click();
+    await expect(page.getByRole('heading', { name: 'New playlist' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { name: 'New playlist' })).toBeHidden();
     // Sidebar logo returns home
     await page.getByRole('button', { name: 'Go to home' }).click();
     await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeVisible();

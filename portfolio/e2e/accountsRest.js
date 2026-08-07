@@ -103,6 +103,29 @@ export async function listOwnPlaylists(request, idToken, uid) {
     .map((row) => row.document.name.split('/').pop());
 }
 
+/** Create a playlist doc directly (owner idToken); returns the new doc id. */
+export async function createPlaylistDoc(request, idToken, { ownerUid, ownerUsername, name, projectIds, visibility }) {
+  const now = new Date().toISOString();
+  const res = await request.post(`${DOC_BASE}/playlists`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+    data: {
+      fields: {
+        ownerUid: { stringValue: ownerUid },
+        ownerUsername: { stringValue: ownerUsername },
+        name: { stringValue: name },
+        description: { stringValue: '' },
+        projectIds: { arrayValue: { values: projectIds.map((id) => ({ stringValue: String(id) })) } },
+        visibility: { stringValue: visibility },
+        createdAt: { timestampValue: now },
+        updatedAt: { timestampValue: now },
+      },
+    },
+  });
+  if (!res.ok()) throw new Error(`playlist create failed: ${await res.text()}`);
+  const body = await res.json();
+  return body.name.split('/').pop();
+}
+
 /** List message doc ids of a conversation (admin token). */
 export async function listMessageDocs(request, idToken, convId) {
   const res = await request.get(`${DOC_BASE}/conversations/${convId}/messages?pageSize=200`, {

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Heart, ListMusic, Plus } from 'lucide-react';
-import { SpLibrary, SpPlay, SpVolume } from './icons/SpotifyIcons';
+import { SpPlay, SpVolume } from './icons/SpotifyIcons';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import { usePlayer } from '../context/PlayerContext';
 import { useMyPlaylists } from '../hooks/usePlaylists';
 import squareLogo from '../assets/square_logo.png';
 
 const LeftSidebar = () => {
-  const { recentlyPlayed, currentProject, isPlaying, playProject, likedCount, openLikedSongs, openDiscographyAll, goHome, openPlaylist, allProjectsList } = usePlayer();
+  const { recentlyPlayed, currentProject, isPlaying, playProject, likedCount, openLikedSongs, goHome, openPlaylist, allProjectsList } = usePlayer();
   const { playlists } = useMyPlaylists();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -23,15 +23,6 @@ const LeftSidebar = () => {
       <button type="button" onClick={goHome} className="w-10 h-10 rounded-full overflow-hidden mb-2 ring-1 ring-white/10" aria-label="Go to home">
         <img src={squareLogo} alt="Kai Zhang" className="w-full h-full object-cover" />
       </button>
-      <button
-        type="button"
-        onClick={openDiscographyAll}
-        className="w-12 h-12 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1f1f1f]"
-        aria-label="Library"
-      >
-        <SpLibrary size={20} />
-      </button>
-
       <div className="relative group">
         <button
           type="button"
