@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SpPlay, SpPause, SpSkipBack, SpSkipForward, SpRepeat, SpShuffle, SpLyrics, SpQueue, SpFullscreen } from './icons/SpotifyIcons';
+import { SpPlay, SpPause, SpSkipBack, SpSkipForward, SpRepeat, SpShuffle, SpLyrics, SpFullscreen } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
@@ -20,8 +20,6 @@ const PlayerBar = () => {
     mainView,
     setMainView,
     isLyricsProjectReady,
-    rightSidebarOpen,
-    toggleRightSidebar,
   } = usePlayer();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -152,14 +150,6 @@ const PlayerBar = () => {
            className={isLyricsProjectReady(currentProject) ? 'cursor-pointer' : 'cursor-default opacity-40'}
          >
            <SpLyrics size={16} className={mainView === 'lyrics' ? 'text-green-500' : 'hover:text-white'} />
-         </button>
-         <button
-           type="button"
-           onClick={toggleRightSidebar}
-           title="Now playing view"
-           aria-label="Toggle now playing view"
-         >
-           <SpQueue size={16} className={rightSidebarOpen ? 'text-green-500 cursor-pointer' : 'hover:text-white cursor-pointer'} />
          </button>
          <button
            type="button"

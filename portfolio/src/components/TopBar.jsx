@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import { useMyProfile } from '../hooks/useUserProfile';
 import { useConversations } from '../hooks/useConversations';
+import { searchPublicPlaylists, searchUsers } from '../lib/searchDirectory';
 import SearchOverlay from './SearchOverlay';
 
 const TopBar = ({ scrollY }) => {
@@ -19,6 +20,7 @@ const TopBar = ({ scrollY }) => {
     openWhatsNew,
     goHome,
     openProfile,
+    openPlaylist,
     openMessages,
   } = usePlayer();
 
@@ -27,8 +29,27 @@ const TopBar = ({ scrollY }) => {
   const { unreadCount } = useConversations();
   const [focused, setFocused] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [directoryResults, setDirectoryResults] = useState({ users: [], playlists: [] });
   const searchInputRef = useRef(null);
   const accountMenuRef = useRef(null);
+
+  // Users + public playlists come from Firestore; debounce behind the
+  // keystroke so search stays snappy.
+  useEffect(() => {
+    const term = searchQuery.trim();
+    if (term.length < 2) {
+      setDirectoryResults({ users: [], playlists: [] });
+      return undefined;
+    }
+    const timer = setTimeout(async () => {
+      const [foundUsers, foundPlaylists] = await Promise.all([
+        searchUsers(term).catch(() => []),
+        searchPublicPlaylists(term).catch(() => []),
+      ]);
+      setDirectoryResults({ users: foundUsers, playlists: foundPlaylists });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!accountMenuOpen) return undefined;
@@ -140,7 +161,19 @@ const TopBar = ({ scrollY }) => {
           {focused && searchQuery.trim() && (
             <SearchOverlay
               results={results}
+              users={directoryResults.users}
+              playlists={directoryResults.playlists}
               onSelect={handleSelect}
+              onSelectUser={(person) => {
+                openProfile(person.username);
+                setSearchQuery('');
+                setFocused(false);
+              }}
+              onSelectPlaylist={(playlist) => {
+                openPlaylist(playlist.id);
+                setSearchQuery('');
+                setFocused(false);
+              }}
               onClose={() => setFocused(false)}
             />
           )}

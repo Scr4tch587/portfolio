@@ -75,7 +75,8 @@ test.describe('accounts core flow', () => {
       // ---- Create a playlist holding that project, open it, play it ----
       await firstRow.hover();
       await firstRow.getByRole('button', { name: 'Add to playlist' }).click();
-      await page.getByRole('button', { name: 'New playlist' }).click();
+      // Scoped to the modal: the left sidebar has a same-named create button.
+      await page.getByRole('main').getByRole('button', { name: 'New playlist' }).click();
       await page.getByLabel('New playlist name').fill(playlistName);
       await page.getByRole('button', { name: 'Create', exact: true }).click();
       // The new playlist appears in the list already containing the project.

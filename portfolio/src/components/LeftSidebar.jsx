@@ -1,6 +1,7 @@
-import React from 'react';
-import { Heart, ListMusic } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, ListMusic, Plus } from 'lucide-react';
 import { SpLibrary, SpPlay, SpVolume } from './icons/SpotifyIcons';
+import CreatePlaylistModal from './CreatePlaylistModal';
 import { usePlayer } from '../context/PlayerContext';
 import { useMyPlaylists } from '../hooks/usePlaylists';
 import squareLogo from '../assets/square_logo.png';
@@ -8,6 +9,7 @@ import squareLogo from '../assets/square_logo.png';
 const LeftSidebar = () => {
   const { recentlyPlayed, currentProject, isPlaying, playProject, likedCount, openLikedSongs, openDiscographyAll, goHome, openPlaylist, allProjectsList } = usePlayer();
   const { playlists } = useMyPlaylists();
+  const [createOpen, setCreateOpen] = useState(false);
 
   const playlistCover = (playlist) => {
     const firstId = (playlist.projectIds || [])[0];
@@ -29,6 +31,20 @@ const LeftSidebar = () => {
       >
         <SpLibrary size={20} />
       </button>
+
+      <div className="relative group">
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="w-12 h-12 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1f1f1f]"
+          aria-label="New playlist"
+        >
+          <Plus size={20} />
+        </button>
+        <div className="sidebar-tooltip pointer-events-none opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#282828] px-2 py-1 rounded text-xs text-white whitespace-nowrap z-50">
+          New playlist
+        </div>
+      </div>
 
       <div className="w-8 h-px bg-[#282828] my-2" />
 
@@ -108,6 +124,8 @@ const LeftSidebar = () => {
           </span>
         )}
       </button>
+
+      <CreatePlaylistModal isOpen={createOpen} onClose={() => setCreateOpen(false)} />
     </aside>
   );
 };

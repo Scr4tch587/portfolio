@@ -4,7 +4,6 @@ import LyricsView from './LyricsView';
 import MessagesView from './MessagesView';
 import PlaylistView from './PlaylistView';
 import ProfileView from './ProfileView';
-import PublicPlaylistsSection from './PublicPlaylistsSection';
 
 function killSwitchEnabled() {
   if (typeof window === 'undefined') return false;
@@ -19,9 +18,7 @@ export default function MainArea() {
       <ProfileView
         username={viewParams.username}
         onMessage={({ username }) => openMessages({ toUsername: username })}
-      >
-        <PublicPlaylistsSection username={viewParams.username} />
-      </ProfileView>
+      />
     );
   }
 

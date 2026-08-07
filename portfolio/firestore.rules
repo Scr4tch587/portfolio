@@ -93,6 +93,25 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['createdAt'])
           && request.resource.data.createdAt is timestamp;
       }
+
+      // Follow graph: publicly countable; the follower writes both sides.
+      match /followers/{followerUid} {
+        allow read: if true;
+        allow create: if signedIn() && request.auth.uid == followerUid
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt is timestamp;
+        // The follower can unfollow; the profile owner can remove a follower.
+        allow delete: if signedIn()
+          && (request.auth.uid == followerUid || request.auth.uid == uid);
+      }
+
+      match /following/{targetUid} {
+        allow read: if true;
+        allow create: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt is timestamp;
+        allow delete: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     // Username uniqueness reservations; claimed in a transaction with the
