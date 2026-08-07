@@ -61,25 +61,51 @@ export function usePlaylist(playlistId) {
     }
     setLoading(true);
     setNotFound(false);
-    const unsubscribe = onSnapshot(
-      doc(db, 'playlists', String(playlistId)),
-      (snapshot) => {
-        if (snapshot.exists()) {
-          setPlaylist({ id: snapshot.id, ...snapshot.data() });
-          setNotFound(false);
-        } else {
+
+    let cancelled = false;
+    let unsubscribe = null;
+    let retryTimer = null;
+    let attempts = 0;
+
+    const subscribe = () => {
+      if (unsubscribe) unsubscribe();
+      unsubscribe = onSnapshot(
+        doc(db, 'playlists', String(playlistId)),
+        (snapshot) => {
+          if (cancelled) return;
+          attempts = 0;
+          if (snapshot.exists()) {
+            setPlaylist({ id: snapshot.id, ...snapshot.data() });
+            setNotFound(false);
+          } else {
+            setPlaylist(null);
+            setNotFound(true);
+          }
+          setLoading(false);
+        },
+        () => {
+          if (cancelled) return;
+          // Errors here are usually a private playlist read by a non-owner,
+          // but can also be transient (an owner's fresh auth token not yet on
+          // the listen stream) — retry briefly before declaring notFound.
+          if (attempts < 3) {
+            attempts += 1;
+            retryTimer = setTimeout(subscribe, 700 * attempts);
+            return;
+          }
           setPlaylist(null);
           setNotFound(true);
-        }
-        setLoading(false);
-      },
-      () => {
-        setPlaylist(null);
-        setNotFound(true);
-        setLoading(false);
-      },
-    );
-    return () => unsubscribe();
+          setLoading(false);
+        },
+      );
+    };
+    subscribe();
+
+    return () => {
+      cancelled = true;
+      if (unsubscribe) unsubscribe();
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [playlistId, user]);
 
   return { playlist, loading, notFound };
