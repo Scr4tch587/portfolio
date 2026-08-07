@@ -122,13 +122,16 @@ const Home = () => {
       if (rowWidth <= 0) return;
       const firstCard = row.firstElementChild;
       const styles = window.getComputedStyle(row);
-      const gapValue = parseFloat(styles.columnGap || styles.gap || '16');
+      // Ungapped flex rows compute columnGap as "normal" -> NaN; the card
+      // spacing lives in each card's own padding, so treat that as 0.
+      const parsedGap = parseFloat(styles.columnGap || styles.gap || '');
+      const gapValue = Number.isFinite(parsedGap) ? parsedGap : 0;
       const cardWidth = firstCard
         ? firstCard.getBoundingClientRect().width
-        : 192; // fallback to w-48
+        : 212;
 
       const slotWidth = cardWidth + gapValue;
-      if (slotWidth <= 0) return;
+      if (!(slotWidth > 0)) return;
 
       // Subtract a tiny epsilon to avoid rendering a partially visible final card.
       const fullCards = Math.floor(((rowWidth + gapValue) - 1) / slotWidth);
