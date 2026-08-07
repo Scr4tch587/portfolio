@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { User } from 'lucide-react';
 import { SpClose, SpPlay } from './icons/SpotifyIcons';
+import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
+import { useConversations } from '../hooks/useConversations';
+import { useFollowerNotifications } from '../hooks/useFollowerNotifications';
 import LikeButton from './LikeButton';
 
 function getProjectDate(project) {
@@ -36,8 +40,17 @@ function getRelativeLabelFromDate(date) {
 }
 
 const WhatsNewMenu = () => {
-  const { whatsNewOpen, closeWhatsNew, playProject, allProjectsList, toggleLike, isLiked } = usePlayer();
+  const {
+    whatsNewOpen, closeWhatsNew, playProject, allProjectsList, toggleLike, isLiked,
+    openProfile, openMessages,
+  } = usePlayer();
+  const { user } = useAuth();
+  const { conversations } = useConversations();
+  const { followers, seenAt, markSeen } = useFollowerNotifications();
   const [filter, setFilter] = useState('all');
+  // The seen watermark as it was when the panel opened, so the "new" dots
+  // survive the markSeen() that opening triggers.
+  const [openSeenAt, setOpenSeenAt] = useState(0);
 
   const handlePlayFromMenu = (project) => {
     playProject(project);
@@ -55,6 +68,16 @@ const WhatsNewMenu = () => {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [whatsNewOpen, closeWhatsNew]);
+
+  useEffect(() => {
+    if (!whatsNewOpen) return;
+    setOpenSeenAt(seenAt);
+    markSeen();
+    // markSeen/seenAt intentionally captured once per open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [whatsNewOpen]);
+
+  const unreadConversations = conversations.filter((conv) => conv.unread);
 
   const items = useMemo(() => {
     const latest = [...allProjectsList]
@@ -127,6 +150,71 @@ const WhatsNewMenu = () => {
             ))}
           </div>
         </div>
+
+        {user && (unreadConversations.length > 0 || followers.length > 0) && (
+          <div className="px-5 pb-2">
+            {unreadConversations.length > 0 && (
+              <>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#a7a7a7] mb-1">Messages</h3>
+                {unreadConversations.map((conv) => (
+                  <button
+                    key={conv.id}
+                    type="button"
+                    onClick={() => {
+                      closeWhatsNew();
+                      openMessages({ convId: conv.id });
+                    }}
+                    className="w-full text-left flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/10"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <p className="text-white text-sm font-medium truncate">
+                        @{conv.otherUsername} sent you a message
+                      </p>
+                      <p className="text-[#a7a7a7] text-sm truncate">{conv.lastMessageText}</p>
+                    </div>
+                  </button>
+                ))}
+              </>
+            )}
+
+            {followers.length > 0 && (
+              <>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#a7a7a7] mt-3 mb-1">New followers</h3>
+                {followers.map((follower) => (
+                  <button
+                    key={follower.uid}
+                    type="button"
+                    onClick={() => {
+                      closeWhatsNew();
+                      openProfile(follower.username);
+                    }}
+                    className="w-full text-left flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/10"
+                  >
+                    <span className="w-9 h-9 rounded-full overflow-hidden bg-[#262626] flex items-center justify-center shrink-0">
+                      {follower.photoURL ? (
+                        <img src={follower.photoURL} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                      ) : (
+                        <User size={16} className="text-[#a7a7a7]" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-white text-sm font-medium truncate">
+                        {follower.displayName} <span className="text-[#a7a7a7] font-normal">(@{follower.username})</span> started following you
+                      </p>
+                      <p className="text-[#a7a7a7] text-sm">{getRelativeLabelFromDate(follower.createdAtDate)}</p>
+                    </div>
+                    {follower.createdAtMs > openSeenAt && (
+                      <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+                    )}
+                  </button>
+                ))}
+              </>
+            )}
+
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#a7a7a7] mt-3">New releases</h3>
+          </div>
+        )}
 
         <div className="px-3 pb-4">
           {items.length === 0 ? (

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import { useMyProfile } from '../hooks/useUserProfile';
 import { useConversations } from '../hooks/useConversations';
+import { useFollowerNotifications } from '../hooks/useFollowerNotifications';
 import { searchPublicPlaylists, searchUsers } from '../lib/searchDirectory';
 import SearchOverlay from './SearchOverlay';
 
@@ -27,6 +28,8 @@ const TopBar = ({ scrollY }) => {
   const { user, signInWithGoogle, signOutUser } = useAuth();
   const { profile } = useMyProfile();
   const { unreadCount } = useConversations();
+  const { newCount: newFollowerCount } = useFollowerNotifications();
+  const bellCount = unreadCount + newFollowerCount;
   const [focused, setFocused] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [directoryResults, setDirectoryResults] = useState({ users: [], playlists: [] });
@@ -189,10 +192,15 @@ const TopBar = ({ scrollY }) => {
           <button
             type="button"
             onClick={openWhatsNew}
-            className="hover:text-white"
+            className="hover:text-white relative"
             aria-label="What's new"
           >
             <SpBell size={16} />
+            {bellCount > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-green-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+                {bellCount > 9 ? '9+' : bellCount}
+              </span>
+            )}
           </button>
           <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             What&apos;s new
