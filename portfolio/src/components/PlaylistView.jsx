@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { SpChevronDown, SpChevronUp, SpClose, SpPlay } from './icons/SpotifyIcons';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { SpChevronDown, SpChevronUp, SpClose, SpMore, SpPlay } from './icons/SpotifyIcons';
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import { usePlaylist } from '../hooks/usePlaylists';
@@ -36,6 +36,26 @@ const PlaylistView = ({ playlistId }) => {
   const [editing, setEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [descriptionDraft, setDescriptionDraft] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const handleOutsideClick = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [menuOpen]);
 
   const isOwner = Boolean(user && playlist && user.uid === playlist.ownerUid);
 
@@ -190,41 +210,77 @@ const PlaylistView = ({ playlistId }) => {
           >
             <SpPlay size={24} className="text-black" />
           </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="px-4 py-1.5 border border-[#7c7c7c] rounded-full text-sm font-bold hover:border-white hover:scale-105 transition-transform"
-          >
-            {copied ? 'Link copied!' : 'Share'}
-          </button>
-          {isOwner && !editing && (
-            <>
-              <button
-                type="button"
-                onClick={startEditing}
-                className="px-4 py-1.5 border border-[#7c7c7c] rounded-full text-sm font-bold hover:border-white hover:scale-105 transition-transform"
-              >
-                Edit details
-              </button>
-              <select
-                value={playlist.visibility}
-                onChange={(e) => updatePlaylistMeta(playlist.id, { visibility: e.target.value }).catch(() => {})}
-                className="bg-[#282828] text-white text-sm rounded-full px-3 py-1.5 border border-transparent hover:border-[#7c7c7c] outline-none cursor-pointer"
-                aria-label="Playlist visibility"
-              >
-                <option value="private">Private</option>
-                <option value="unlisted">Unlisted</option>
-                <option value="public">Public</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="px-4 py-1.5 border border-red-400/60 text-red-400 rounded-full text-sm font-bold hover:border-red-400 hover:scale-105 transition-transform"
-              >
-                Delete playlist
-              </button>
-            </>
-          )}
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="text-[#b3b3b3] hover:text-white hover:scale-105 transition-all p-2"
+              aria-label="More options"
+              title="More options"
+            >
+              <SpMore size={24} />
+            </button>
+            {copied && !menuOpen && (
+              <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 text-xs bg-[#282828] text-white px-2 py-1 rounded whitespace-nowrap">
+                Link copied!
+              </span>
+            )}
+            {menuOpen && (
+              <div className="absolute left-0 top-full mt-2 w-56 rounded-md bg-[#282828] shadow-xl p-1 z-50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleShare();
+                  }}
+                  className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded"
+                >
+                  Copy link to playlist
+                </button>
+                {isOwner && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        startEditing();
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded"
+                    >
+                      Edit details
+                    </button>
+                    <div className="my-1 h-px bg-white/10" />
+                    {['public', 'unlisted', 'private']
+                      .filter((visibility) => visibility !== playlist.visibility)
+                      .map((visibility) => (
+                        <button
+                          key={visibility}
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            updatePlaylistMeta(playlist.id, { visibility }).catch(() => {});
+                          }}
+                          className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10 rounded"
+                        >
+                          Make {visibility}
+                        </button>
+                      ))}
+                    <div className="my-1 h-px bg-white/10" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleDelete();
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-red-400 hover:bg-white/10 rounded"
+                    >
+                      Delete playlist
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Track list */}
