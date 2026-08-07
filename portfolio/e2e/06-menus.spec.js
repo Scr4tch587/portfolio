@@ -70,9 +70,8 @@ test.describe('menus and modals', () => {
     await expect(page.getByText('1 / 4')).toBeHidden();
   });
 
-  test('signed-out account button offers Google sign-in on hover', async ({ page }) => {
+  test('signed-out header shows a Sign up button', async ({ page }) => {
     await gotoHome(page);
-    await page.getByRole('button', { name: 'Sign in with Google' }).hover();
-    await expect(page.getByText('Sign in with Google', { exact: true })).toBeVisible();
+    await expect(page.getByRole('banner').getByRole('button', { name: 'Sign up' })).toBeVisible();
   });
 });

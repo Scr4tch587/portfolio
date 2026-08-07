@@ -1,7 +1,5 @@
 import { expect } from '@playwright/test';
 
-export const ADMIN_PASSPHRASE = 'b2c0d406-13ea-42cc-922f-8a440c5f0c4c';
-
 const FIREBASE_PROJECT_ID = 'portfolio-d996c';
 
 /**
@@ -82,14 +80,16 @@ export function playerBar(page) {
 
 /**
  * Sign in as the admin. The dev page is Google-only (popups can't be
- * automated), so tests mint an admin custom token via the adminIssueToken
- * callable and hand it to the app's DEV-only sign-in hook.
+ * automated), so tests sign in as the dedicated admin-claim email/password
+ * account through the app's DEV-only sign-in hook.
  */
-export async function loginAsAdmin(page, request) {
-  const { getAdminCustomToken } = await import('./adminRest.js');
-  const token = await getAdminCustomToken(request);
+export async function loginAsAdmin(page) {
+  const { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } = await import('./adminRest.js');
   await page.goto('/dev');
-  await page.waitForFunction(() => typeof window.__testSignInWithCustomToken === 'function');
-  await page.evaluate((t) => window.__testSignInWithCustomToken(t), token);
+  await page.waitForFunction(() => typeof window.__testSignInWithEmailPassword === 'function');
+  await page.evaluate(
+    ([email, password]) => window.__testSignInWithEmailPassword(email, password),
+    [E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD],
+  );
   await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible({ timeout: 30_000 });
 }

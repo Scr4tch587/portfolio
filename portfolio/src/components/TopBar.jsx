@@ -198,26 +198,36 @@ const TopBar = ({ scrollY }) => {
 
       <div className="shrink-0">
         <div className="relative group" ref={accountMenuRef}>
-          <button
-            type="button"
-            onClick={handleAccountClick}
-            className="w-12 h-12 rounded-full bg-[#1f1f1f] hover:bg-[#2a2a2a] hover:scale-105 transition-all flex items-center justify-center text-gray-300 hover:text-white"
-            aria-label={user ? 'Account menu' : 'Sign in with Google'}
-          >
-            <span className="w-8 h-8 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-center overflow-hidden">
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-              ) : (
-                <User size={16} />
+          {user ? (
+            <button
+              type="button"
+              onClick={handleAccountClick}
+              className="w-12 h-12 rounded-full bg-[#1f1f1f] hover:bg-[#2a2a2a] hover:scale-105 transition-all flex items-center justify-center text-gray-300 hover:text-white"
+              aria-label="Account menu"
+            >
+              <span className="w-8 h-8 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-center overflow-hidden">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={16} />
+                )}
+              </span>
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-green-500 rounded-full ring-2 ring-black" aria-label={`${unreadCount} unread conversations`} />
               )}
-            </span>
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-green-500 rounded-full ring-2 ring-black" aria-label={`${unreadCount} unread conversations`} />
-            )}
-          </button>
-          {!accountMenuOpen && (
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAccountClick}
+              className="h-12 px-8 rounded-full bg-white text-black text-base font-bold hover:scale-105 transition-transform whitespace-nowrap"
+            >
+              Sign up
+            </button>
+          )}
+          {!accountMenuOpen && user && (
             <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              {user ? user.displayName || user.email : 'Sign in with Google'}
+              {user.displayName || user.email}
             </span>
           )}
           {accountMenuOpen && user && (

@@ -8,7 +8,7 @@ function readEnvLocal() {
   const raw = fs.readFileSync(path.join(rootDir, '.env.local'), 'utf8');
   const out = {};
   for (const line of raw.split('\n')) {
-    const match = line.match(/^([A-Z_]+)=(.*)$/);
+    const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
     if (match) out[match[1]] = match[2].trim();
   }
   return out;

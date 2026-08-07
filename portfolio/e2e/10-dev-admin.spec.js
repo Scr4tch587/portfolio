@@ -33,7 +33,7 @@ test.describe('admin panel', () => {
     const before = await fetchProjects(request);
     const prioritySnapshot = new Map(before.map((p) => [p.docId, p.orderingPriority]));
 
-    await loginAsAdmin(page, request);
+    await loginAsAdmin(page);
 
     // Project list shows live projects
     const sorted = sortByPriority(before);
@@ -119,8 +119,8 @@ test.describe('admin panel', () => {
     await expect(page.getByRole('heading', { name: 'Developer Login' })).toBeVisible({ timeout: 15_000 });
   });
 
-  test('authenticated /dev redirects straight to admin panel', async ({ page, request }) => {
-    await loginAsAdmin(page, request);
+  test('authenticated /dev redirects straight to admin panel', async ({ page }) => {
+    await loginAsAdmin(page);
     await page.goto('/dev');
     await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible({ timeout: 15_000 });
   });
