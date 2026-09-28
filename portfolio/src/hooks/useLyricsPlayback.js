@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { usePlayer } from '../context/PlayerContext';
+import { usePlaybackClock } from '../context/PlayerContext';
 
 function findActiveBlockIndex(chunks, currentTimeMs) {
   if (!Array.isArray(chunks) || chunks.length === 0) return 0;
@@ -53,7 +53,7 @@ function isTallBlock(node, container) {
 }
 
 export function useLyricsPlayback(chunks, scrollContainerRef) {
-  const { currentTime } = usePlayer();
+  const { currentTime } = usePlaybackClock();
   const blockRefs = useRef(new Map());
   const scrollTimeoutRef = useRef(null);
   const timeBucket = Math.floor(currentTime * 4);

@@ -69,8 +69,9 @@ const Home = () => {
     hasAutoSelected.current = true;
     const randomIndex = Math.floor(Math.random() * allProjects.length);
     // Preload the player bar without stealing the view: no sidebar, no
-    // lyrics-view switch, and stay paused until the visitor presses play.
-    playProject(allProjects[randomIndex], { openSidebar: false, switchView: false });
+    // lyrics-view switch, stay paused until the visitor presses play, and
+    // don't count a stream nobody asked for.
+    playProject(allProjects[randomIndex], { openSidebar: false, switchView: false, countStream: false });
     setIsPlaying(false);
   }, [allProjects, currentProject, firestoreInitialized, playProject, setIsPlaying]);
 

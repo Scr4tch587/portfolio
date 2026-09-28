@@ -62,7 +62,7 @@ h1, h2, h3 {
 @keyframes slideUp {
 	from {
 		opacity: 0;
-		transform: translateY(20px);
+		transform: translateY(14px);
 	}
 	to {
 		opacity: 1;
@@ -77,25 +77,25 @@ h1, h2, h3 {
 	}
 	to {
 		opacity: 0;
-		transform: translateY(12px);
+		transform: translateY(8px);
 	}
 }
 
 /* Toast enter/exit classes for smooth transitions (use transforms + opacity) */
 .toast-enter {
 	opacity: 0;
-	transform: translateY(18px);
+	transform: translateY(14px);
 	will-change: transform, opacity;
 }
 .toast-enter-active {
-	animation: slideUp 260ms cubic-bezier(.2,.9,.2,1) both;
+	animation: slideUp 480ms cubic-bezier(.22,.61,.36,1) both;
 }
 .toast-exit {
 	opacity: 1;
 	transform: translateY(0);
 }
 .toast-exit-active {
-	animation: slideDown 220ms cubic-bezier(.2,.9,.2,1) both;
+	animation: slideDown 520ms cubic-bezier(.4,0,.6,1) both;
 }
 
 /* Fade-in-up utility for sidebars/player bar */

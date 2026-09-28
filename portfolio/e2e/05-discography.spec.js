@@ -79,8 +79,5 @@ test.describe('discography', () => {
     await expect(page.getByRole('heading', { name: 'New playlist' })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('heading', { name: 'New playlist' })).toBeHidden();
-    // Sidebar logo returns home
-    await page.getByRole('button', { name: 'Go to home' }).click();
-    await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeVisible();
   });
 });

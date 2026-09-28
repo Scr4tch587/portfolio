@@ -101,7 +101,11 @@ test.describe('player bar', () => {
       await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeVisible();
     }
 
-    // Row goes green + shows equalizer gif while playing
+    // Row goes green + shows equalizer gif while playing. The equalizer is
+    // swapped for a pause icon while the row is hovered, and the mouse may
+    // still be parked on the row (e.g. when the auto-selected project was
+    // this one and the click only toggled play), so move it away first.
+    await page.mouse.move(0, 0);
     await expect(firstRow.locator('img[alt="playing"]')).toBeVisible();
     // Clicking again pauses
     await firstRow.click();

@@ -3,14 +3,15 @@ import { SpPlay } from './icons/SpotifyIcons';
 
 /**
  * StreamToast - Non-blocking, purely informational toast above the PlayerBar.
- * Appears once per playthrough when the stream is confirmed (5s continuous).
+ * Appears whenever a project is played (each play counts a stream). Fully
+ * click-through so it never gets in the way of the next click.
  *
  * @param {boolean} show - Whether to display the toast
  */
 const StreamToast = ({ show }) => {
   const [visible, setVisible] = useState(show);
   const [animState, setAnimState] = useState('enter'); // 'enter' | 'exit'
-  const EXIT_MS = 220;
+  const EXIT_MS = 520;
 
   useEffect(() => {
     if (show) {
@@ -32,8 +33,8 @@ const StreamToast = ({ show }) => {
   const containerClass = animState === 'enter' ? 'toast-enter toast-enter-active' : 'toast-exit toast-exit-active';
 
   return (
-    <div className="fixed inset-x-0 bottom-28 flex justify-center z-[60] pointer-events-none">
-      <div className={`pointer-events-auto ${containerClass}`}>
+    <div className="fixed inset-x-0 bottom-28 flex justify-center z-[60] pointer-events-none" aria-live="polite">
+      <div className={containerClass}>
         <div className="bg-[#282828] text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3">
           <SpPlay size={16} className="text-green-500 shrink-0" />
           <span className="text-sm font-medium">Project streamed!</span>

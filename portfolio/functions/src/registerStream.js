@@ -1,9 +1,10 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 
-// Best-effort per-instance throttle: the client only confirms one stream per
-// playthrough (>=5s), so anything faster than one hit per few seconds per
-// caller+project is not organic.
+// Best-effort per-instance throttle: the client counts a stream each time a
+// project is played, so re-playing the *same* project faster than once every
+// few seconds per caller is not organic. Different projects are separate keys,
+// so clicking through the catalog quickly still counts each one.
 const MIN_INTERVAL_MS = 4000;
 const recentCalls = new Map();
 

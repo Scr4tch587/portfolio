@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
@@ -66,6 +66,56 @@ const expandToken = (token) => TOKEN_TO_GROUP[token] || [token];
 // eslint-disable-next-line react-refresh/only-export-components
 export const usePlayer = () => useContext(PlayerContext);
 
+// The playback clock lives in its own context so the 50ms tick only
+// re-renders the few components that show time (player bar, lyrics) instead
+// of every PlayerContext consumer. It is purely cosmetic: it loops at the
+// track length and nothing happens when it wraps.
+const PlaybackClockContext = createContext({ currentTime: 0, durationSeconds: 0, seekTo: () => {} });
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const usePlaybackClock = () => useContext(PlaybackClockContext);
+
+const TICK_MS = 50;
+
+const PlaybackClockProvider = ({ isPlaying, durationSeconds, playbackEpoch, children }) => {
+  const [currentTime, setCurrentTime] = useState(0);
+
+  // Every playProject() bumps the epoch: restart from 0:00 before paint.
+  useLayoutEffect(() => {
+    setCurrentTime(0);
+  }, [playbackEpoch]);
+
+  useEffect(() => {
+    if (!isPlaying || !(durationSeconds > 0)) return undefined;
+    let lastTick = performance.now();
+    const interval = setInterval(() => {
+      const now = performance.now();
+      const elapsedSeconds = (now - lastTick) / 1000;
+      lastTick = now;
+      setCurrentTime((prevTime) => {
+        const nextTime = prevTime + elapsedSeconds;
+        return nextTime >= durationSeconds ? 0 : nextTime;
+      });
+    }, TICK_MS);
+    return () => clearInterval(interval);
+  }, [isPlaying, durationSeconds]);
+
+  const value = useMemo(() => ({
+    currentTime,
+    durationSeconds,
+    seekTo: (seconds) => {
+      const next = Number.isFinite(seconds) ? seconds : 0;
+      setCurrentTime(Math.max(0, Math.min(durationSeconds, next)));
+    },
+  }), [currentTime, durationSeconds]);
+
+  return (
+    <PlaybackClockContext.Provider value={value}>
+      {children}
+    </PlaybackClockContext.Provider>
+  );
+};
+
 export const PlayerProvider = ({ children }) => {
   const { user } = useAuth();
   const [currentProject, setCurrentProject] = useState(null);
@@ -74,14 +124,21 @@ export const PlayerProvider = ({ children }) => {
   // Parameters for the non-home views: { username?, playlistId?, convId?, toUsername? }
   const [viewParams, setViewParams] = useState({});
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(0);
-  const [streamConfirmedTrigger, setStreamConfirmedTrigger] = useState(0);
-  // Stream accounting lives in refs, not state: it advances every 50ms tick
-  // and must not re-render every context consumer.
-  const continuousPlayMsRef = useRef(0);
-  const streamArmedRef = useRef(false); // one stream per playthrough
-  const currentProjectIdRef = useRef(null);
+  // Incremented on every playProject() so the clock restarts at 0:00.
+  const [playbackEpoch, setPlaybackEpoch] = useState(0);
+  // A stream is counted the moment a project is played (no real-time
+  // threshold). StreamRegistrar reacts to each event: toast + server call.
+  const [streamEvent, setStreamEvent] = useState(null); // { seq, project }
+  const streamSeqRef = useRef(0);
+  // The project preloaded into the bar on page load (countStream: false) is
+  // only streamed once the visitor actually presses play on it.
+  const pendingStreamProjectRef = useRef(null);
+
+  const emitStream = (project) => {
+    streamSeqRef.current += 1;
+    setStreamEvent({ seq: streamSeqRef.current, project });
+  };
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [allProjectsList, setAllProjectsList] = useState([]);
   const [projectsLoaded, setProjectsLoaded] = useState(false);
@@ -265,7 +322,12 @@ export const PlayerProvider = ({ children }) => {
 
   const playProject = (project, options = {}) => {
     if (!project) return;
-    const { openSidebar = true, switchView = true, keepQueue = false } = options;
+    const {
+      openSidebar = true,
+      switchView = true,
+      keepQueue = false,
+      countStream = true,
+    } = options;
     // Playing outside an active queue (e.g. a home row) returns next/prev to
     // the full catalog.
     if (!keepQueue) setPlayQueue(null);
@@ -277,17 +339,15 @@ export const PlayerProvider = ({ children }) => {
       setRightSidebarOpen(true);
     }
     setIsPlaying(true);
-    setCurrentTime(0);
-    continuousPlayMsRef.current = 0;
-    streamArmedRef.current = true;
-    currentProjectIdRef.current = project.id;
+    setPlaybackEpoch((prev) => prev + 1);
     setDurationSeconds(getPlaybackDuration(project));
     addToRecentlyPlayed(project);
-  };
-
-  const seekTo = (seconds) => {
-    const next = Number.isFinite(seconds) ? seconds : 0;
-    setCurrentTime(Math.max(0, Math.min(durationSeconds, next)));
+    if (countStream) {
+      pendingStreamProjectRef.current = null;
+      emitStream(project);
+    } else {
+      pendingStreamProjectRef.current = project;
+    }
   };
 
   // Optional queue override: while set (e.g. playing a playlist), next/prev/
@@ -359,24 +419,16 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-    if (!isPlaying && currentProject) {
+    const willPlay = !isPlaying;
+    setIsPlaying(willPlay);
+    if (willPlay && currentProject) {
       setRightSidebarOpen(true);
+      const pending = pendingStreamProjectRef.current;
+      if (pending && pending.id === currentProject.id) {
+        pendingStreamProjectRef.current = null;
+        emitStream(currentProject);
+      }
     }
-  };
-
-  // Pausing breaks "continuous" — the 5s clock starts over on resume, but the
-  // playthrough stays armed/disarmed as it was.
-  useEffect(() => {
-    if (!isPlaying) {
-      continuousPlayMsRef.current = 0;
-    }
-  }, [isPlaying]);
-
-  // Confirms the single stream for the current playthrough and notifies
-  // listeners (toast, Firestore view registration).
-  const registerStreamConfirmed = () => {
-    setStreamConfirmedTrigger((prev) => prev + 1);
   };
 
   // Liked IDs: in-memory for signed-out visitors (session only), mirrored to
@@ -465,17 +517,6 @@ export const PlayerProvider = ({ children }) => {
     }, ms);
   };
 
-  // Handle visibility change to enforce "continuous" focus
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        continuousPlayMsRef.current = 0;
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
-
   // Keep the open/selected project in sync with Firestore-backed list updates.
   useEffect(() => {
     if (!currentProject || allProjectsList.length === 0) return;
@@ -516,46 +557,6 @@ export const PlayerProvider = ({ children }) => {
     }
   }, [allProjectsList, currentProject, mainView]);
 
-  useEffect(() => {
-    let interval = null;
-    let lastTick = performance.now();
-    if (isPlaying && durationSeconds > 0) {
-      const updateInterval = 50;
-
-      interval = setInterval(() => {
-        const now = performance.now();
-        const elapsedMs = now - lastTick;
-        lastTick = now;
-        const elapsedSeconds = elapsedMs / 1000;
-
-        setCurrentTime((prevTime) => {
-          const nextTime = prevTime + elapsedSeconds;
-          if (nextTime >= durationSeconds) {
-            // Loop = a new playthrough: eligible for one new stream.
-            streamArmedRef.current = true;
-            continuousPlayMsRef.current = 0;
-            return 0;
-          }
-          return nextTime;
-        });
-
-        // The clock only advances while the tab is visible, and each
-        // playthrough confirms at most one stream after 5 continuous seconds.
-        if (!document.hidden) {
-          continuousPlayMsRef.current += elapsedMs;
-          if (streamArmedRef.current && continuousPlayMsRef.current >= 5000) {
-            streamArmedRef.current = false;
-            registerStreamConfirmed();
-          }
-        }
-
-      }, updateInterval);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, durationSeconds]);
-
   return (
     <PlayerContext.Provider value={{ 
       currentProject, 
@@ -572,11 +573,8 @@ export const PlayerProvider = ({ children }) => {
       setIsPlaying, 
       playProject, 
       togglePlay,
-      currentTime,
-      seekTo,
       durationSeconds,
-      streamConfirmedTrigger,
-      streamCompleteTrigger: streamConfirmedTrigger, // Alias for backward compatibility
+      streamEvent,
       recentlyPlayed,
       allProjectsList,
       setAllProjectsList,
@@ -609,7 +607,13 @@ export const PlayerProvider = ({ children }) => {
       playQueue,
       playFromQueue,
     }}>
-      {children}
+      <PlaybackClockProvider
+        isPlaying={isPlaying}
+        durationSeconds={durationSeconds}
+        playbackEpoch={playbackEpoch}
+      >
+        {children}
+      </PlaybackClockProvider>
     </PlayerContext.Provider>
   );
 };

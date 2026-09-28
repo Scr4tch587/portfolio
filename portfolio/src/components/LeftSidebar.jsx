@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Heart, ListMusic, Plus } from 'lucide-react';
-import { SpPlay, SpVolume } from './icons/SpotifyIcons';
+import { SpPlay } from './icons/SpotifyIcons';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import { usePlayer } from '../context/PlayerContext';
 import { useMyPlaylists } from '../hooks/usePlaylists';
-import squareLogo from '../assets/square_logo.png';
 
 const LeftSidebar = () => {
-  const { recentlyPlayed, currentProject, isPlaying, playProject, likedCount, openLikedSongs, goHome, openPlaylist, allProjectsList } = usePlayer();
+  const { recentlyPlayed, playProject, likedCount, openLikedSongs, openPlaylist, allProjectsList } = usePlayer();
   const { playlists } = useMyPlaylists();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -20,9 +19,6 @@ const LeftSidebar = () => {
 
   return (
     <aside className="hidden md:flex w-[72px] bg-[#121212] rounded-lg p-2 flex-col gap-1 items-center overflow-y-auto custom-scrollbar shrink-0">
-      <button type="button" onClick={goHome} className="w-10 h-10 rounded-full overflow-hidden mb-2 ring-1 ring-white/10" aria-label="Go to home">
-        <img src={squareLogo} alt="Kai Zhang" className="w-full h-full object-cover" />
-      </button>
       <div className="relative group">
         <button
           type="button"
@@ -41,8 +37,6 @@ const LeftSidebar = () => {
 
       <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 items-center">
         {recentlyPlayed.map((project) => {
-          const isActive = currentProject?.id === project.id;
-          const isActiveAndPlaying = isActive && isPlaying;
           return (
             <div key={project.id} className="relative group">
               <button
@@ -56,11 +50,6 @@ const LeftSidebar = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors flex items-center justify-center">
                   <SpPlay size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                {isActiveAndPlaying && (
-                  <div className="absolute inset-0 rounded bg-black/60 flex items-center justify-center">
-                    <SpVolume size={26} className="text-green-500" />
-                  </div>
-                )}
               </button>
               <div className="sidebar-tooltip pointer-events-none opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#282828] px-2 py-1 rounded text-xs text-white whitespace-nowrap z-50">
                 {project.title}

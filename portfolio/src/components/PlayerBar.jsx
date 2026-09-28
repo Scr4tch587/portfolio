@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SpPlay, SpPause, SpSkipBack, SpSkipForward, SpRepeat, SpShuffle, SpLyrics, SpFullscreen } from './icons/SpotifyIcons';
-import { usePlayer } from '../context/PlayerContext';
+import { usePlayer, usePlaybackClock } from '../context/PlayerContext';
 import LikeButton from './LikeButton';
 
 const PlayerBar = () => {
@@ -8,9 +8,6 @@ const PlayerBar = () => {
     currentProject,
     isPlaying,
     togglePlay,
-    currentTime,
-    seekTo,
-    durationSeconds,
     toggleLike,
     isLiked,
     isShuffleOn,
@@ -21,6 +18,7 @@ const PlayerBar = () => {
     setMainView,
     isLyricsProjectReady,
   } = usePlayer();
+  const { currentTime, durationSeconds, seekTo } = usePlaybackClock();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
@@ -113,7 +111,7 @@ const PlayerBar = () => {
           
           <div
             className="relative flex items-center justify-center"
-            title="Always on repeat — every full playthrough counts a new stream"
+            title="Always on repeat"
           >
             <SpRepeat size={16} className="text-green-500" />
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
