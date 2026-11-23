@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback } from 'react';
-import { collection, doc, getDocs, limit, orderBy, query, writeBatch } from 'firebase/firestore';
+import { useState, useCallback } from 'react';
+import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { GripVertical } from 'lucide-react';
 
 function getStatusTone(status) {
   if (status === 'ready') return 'bg-green-500/15 text-green-300 border-green-400/20';
@@ -29,57 +28,8 @@ export default function ProjectList({
   onDelete,
   onReprocess,
 }) {
-  const [dragIndex, setDragIndex] = useState(null);
-  const [overIndex, setOverIndex] = useState(null);
-  const [saving, setSaving] = useState(false);
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [jobsByProjectId, setJobsByProjectId] = useState({});
-  const dragNode = useRef(null);
-
-  const handleDragStart = useCallback((e, index) => {
-    setDragIndex(index);
-    dragNode.current = e.target.closest('[data-row]');
-    e.dataTransfer.effectAllowed = 'move';
-    // Make the drag image semi-transparent
-    requestAnimationFrame(() => {
-      if (dragNode.current) dragNode.current.style.opacity = '0.4';
-    });
-  }, []);
-
-  const handleDragEnd = useCallback(async () => {
-    if (dragNode.current) dragNode.current.style.opacity = '1';
-
-    if (dragIndex !== null && overIndex !== null && dragIndex !== overIndex) {
-      const reordered = [...projects];
-      const [moved] = reordered.splice(dragIndex, 1);
-      reordered.splice(overIndex, 0, moved);
-
-      // Batch-write new orderingPriority values
-      setSaving(true);
-      try {
-        const batch = writeBatch(db);
-        reordered.forEach((project, i) => {
-          batch.update(doc(db, 'projects', project.docId), { orderingPriority: i + 1 });
-        });
-        await batch.commit();
-      } catch (err) {
-        console.error('Failed to save order:', err);
-      } finally {
-        setSaving(false);
-      }
-    }
-
-    setDragIndex(null);
-    setOverIndex(null);
-    dragNode.current = null;
-  }, [dragIndex, overIndex, projects]);
-
-  const handleDragOver = useCallback((e, index) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setOverIndex(index);
-  }, []);
-
   const toggleExpanded = useCallback(async (project) => {
     const nextProjectId = expandedProjectId === project.docId ? null : project.docId;
     setExpandedProjectId(nextProjectId);
@@ -102,7 +52,6 @@ export default function ProjectList({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Projects</h2>
-          {saving && <span className="text-xs text-green-400 animate-pulse">Saving order...</span>}
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={onRefresh} className="rounded-md border border-white/25 px-3 py-2 text-xs font-semibold text-white">
@@ -119,9 +68,6 @@ export default function ProjectList({
           <p className="py-4 text-gray-400 text-sm">No projects found.</p>
         )}
         {projects.map((project, index) => {
-          const isDragging = dragIndex === index;
-          const isOver = overIndex === index && dragIndex !== index;
-
           const projectJobs = jobsByProjectId[project.docId] || [];
           const isExpanded = expandedProjectId === project.docId;
 
@@ -129,23 +75,8 @@ export default function ProjectList({
             <div key={project.docId} className="rounded-lg border border-transparent">
               <div
                 data-row
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragEnd={handleDragEnd}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnter={(e) => e.preventDefault()}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors select-none ${
-                  isOver
-                    ? 'bg-green-500/15 border border-green-500/40'
-                    : isDragging
-                      ? 'opacity-40'
-                      : 'border border-transparent hover:bg-white/5'
-                }`}
+                className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-sm transition-colors hover:bg-white/5"
               >
-                <div className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 shrink-0">
-                  <GripVertical size={16} />
-                </div>
-
                 <span className="text-xs text-gray-500 w-5 text-right tabular-nums shrink-0">{index + 1}</span>
 
                 {project.imageUrl ? (
@@ -170,7 +101,7 @@ export default function ProjectList({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {project.github ? (
+                  {project.github || project.processedReadmeRef ? (
                     <button
                       type="button"
                       onClick={() => onReprocess(project)}

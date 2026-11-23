@@ -4,6 +4,10 @@ import { httpsCallable } from 'firebase/functions';
 import { useNavigate } from 'react-router-dom';
 import ProjectForm from '../components/admin/ProjectForm';
 import ProjectList from '../components/admin/ProjectList';
+import DiscographyOrder from '../components/admin/DiscographyOrder';
+import FavoriteFilms from '../components/admin/FavoriteFilms';
+import ProfileBio from '../components/admin/ProfileBio';
+import ProfilePhotos from '../components/admin/ProfilePhotos';
 import { useAuth } from '../context/AuthContext';
 import { db, functions } from '../firebase';
 
@@ -136,7 +140,7 @@ export default function AdminPanel() {
         </div>
         <p className="mt-2 text-sm text-gray-400">Manage Firestore-backed projects.</p>
 
-        <div className="mt-6 flex gap-2">
+        <div className="mt-6 flex flex-wrap gap-2">
           <button
             type="button"
             data-active
@@ -147,6 +151,17 @@ export default function AdminPanel() {
           >
             Projects
           </button>
+          {[['admin-discography', 'Spotify discography order'], ['admin-favorites', 'Profile & Letterboxd']].map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              data-active={false}
+              className={tabClass}
+              onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         <div className="mt-6 space-y-5">
@@ -188,6 +203,16 @@ export default function AdminPanel() {
             onDelete={handleDeleteProject}
           />
           {deleteError && <p className="text-sm text-red-400">{deleteError}</p>}
+
+          <div id="admin-discography" className="scroll-mt-4">
+            <DiscographyOrder projects={projects} />
+          </div>
+
+          <div id="admin-favorites" className="scroll-mt-4 space-y-5">
+            <ProfileBio />
+            <ProfilePhotos />
+            <FavoriteFilms projects={projects} />
+          </div>
         </div>
       </div>
     </main>
