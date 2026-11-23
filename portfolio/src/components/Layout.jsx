@@ -3,12 +3,8 @@ import { ChevronLeft } from 'lucide-react';
 import RightSidebar from './RightSidebar';
 import PlayerBar from './PlayerBar';
 import TopBar from './TopBar';
-import LeftSidebar from './LeftSidebar';
 import LikedSongsModal from './LikedSongsModal';
 import StreamRegistrar from './StreamRegistrar';
-import UsernameModal from './UsernameModal';
-import HashRouter from './HashRouter';
-import WhatsNewMenu from './WhatsNewMenu';
 import { usePlayer } from '../context/PlayerContext';
 
 const Layout = ({ children }) => {
@@ -51,8 +47,6 @@ const Layout = ({ children }) => {
   return (
     <div className="bg-black min-h-screen font-sans text-white flex flex-col h-screen overflow-hidden">
       <div className="flex flex-1 p-2 gap-2 overflow-hidden pb-[80px]">
-        <LeftSidebar />
-
         <div className="flex-1 flex flex-col bg-[#121212] rounded-lg overflow-hidden relative">
           <TopBar scrollY={scrollY} />
           <main
@@ -80,10 +74,7 @@ const Layout = ({ children }) => {
 
       <PlayerBar />
       <LikedSongsModal />
-      <WhatsNewMenu />
       <StreamRegistrar />
-      <UsernameModal />
-      <HashRouter />
     </div>
   );
 };

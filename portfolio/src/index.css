@@ -5,6 +5,22 @@
 @theme {
   --color-green-500: #1ed760;
   --font-sans: 'SpotifyMixUI', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+
+  /* Letterboxd mode palette (measured from letterboxd.com) */
+  --color-lb-bg: #14181c;
+  --color-lb-panel: #2c3440;
+  --color-lb-chip: #283038;
+  --color-lb-line: #456;
+  --color-lb-text: #99aabb;
+  --color-lb-muted: #667788;
+  --color-lb-heading: #ddeeff;
+  --color-lb-green: #00e054;
+  --color-lb-orange: #ff8000;
+  --color-lb-blue: #40bcf4;
+  --color-lb-action: #445566;
+  --color-lb-star-off: #445566;
+  --font-lb: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-lb-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
 }
 
 /* Spotify's actual fonts, hotlinked from their CORS-open CDN (encore.scdn.co).
@@ -264,11 +280,6 @@ h1, h2, h3 {
 	animation: searchOverlayIn 200ms ease both;
 }
 
-/* Left sidebar tooltip */
-.sidebar-tooltip {
-	transition: opacity 150ms ease, transform 150ms ease;
-}
-
 @media (prefers-reduced-motion: reduce) {
 	.like-pop { animation: none !important; }
 }
@@ -306,4 +317,279 @@ h1, h2, h3 {
 .lyric-table table,
 .lyric-image img {
 	margin: 0;
+}
+
+
+/* ---------------- Letterboxd mode ---------------- */
+
+/* Inter stands in for Graphik (Letterboxd's licensed UI face); Source Serif 4
+   stands in for Tiempos Headline on film titles. Both are Google Fonts. */
+.lb-root {
+  font-family: var(--font-lb);
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  color: var(--color-lb-text);
+  background: var(--color-lb-bg);
+  -webkit-font-smoothing: antialiased;
+}
+.lb-root h1, .lb-root h2, .lb-root h3, .lb-root h4 {
+  font-family: var(--font-lb);
+}
+/* Profile header: Figtree stands in for Letterboxd's Graphik. */
+.lb-root .lb-profile-header,
+.lb-root .lb-profile-header h1 {
+  font-family: 'Figtree', var(--font-lb);
+}
+.lb-root .lb-film { font-family: 'Figtree', var(--font-lb); letter-spacing: 0; }
+.lb-root .lb-serif {
+  font-family: var(--font-lb-serif);
+}
+
+/* Section heading: 13px uppercase, tracked, hairline underneath */
+.lb-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-lb-line);
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  color: var(--color-lb-text);
+}
+.lb-section-heading a { color: var(--color-lb-muted); }
+.lb-section-heading a:hover { color: var(--color-lb-heading); }
+
+.lb-root .lb-average { font-family: 'Figtree', var(--font-lb); }
+
+/* Ratings histogram: Letterboxd's tooltip above the hovered bar. */
+.lb-histogram-tip {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  display: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #456;
+  color: #def;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+.lb-histogram-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #456;
+  border-bottom-width: 0;
+}
+.lb-histogram-bar:hover .lb-histogram-tip { display: block; }
+
+/* Profile nav: Letterboxd's boxed row of tabs under the profile header. */
+.lb-profile-nav {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  height: 46px;
+  margin-top: 24px;
+  border: 1px solid #24303c;
+  border-radius: 3px;
+  font-family: 'Figtree', var(--font-lb);
+  font-size: 15px;
+  letter-spacing: 0;
+  color: var(--color-lb-text);
+}
+.lb-profile-nav a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+}
+.lb-profile-nav a:hover { color: var(--color-lb-heading); }
+.lb-profile-nav a[aria-current='page'] { color: #fff; }
+.lb-profile-nav a[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: -1px;
+  height: 1px;
+  background: #fff;
+}
+
+/* README sections as "Popular reviews": serif body, as on a film page. */
+.lb-review-body {
+  font-family: var(--font-lb-serif);
+  font-size: 16px;
+  line-height: 24.5px;
+  letter-spacing: 0;
+  color: var(--color-lb-text);
+  overflow-wrap: anywhere;
+}
+.lb-review-body > * + * { margin-top: 6px; }
+.lb-review-body .lb-review-title,
+.lb-review-body h4, .lb-review-body h5, .lb-review-body h6,
+.lb-review-body strong { color: #fff; font-weight: 400; }
+.lb-review-body h4, .lb-review-body h5, .lb-review-body h6 { font-family: var(--font-lb-serif); font-size: 16px; }
+.lb-review-body strong { font-weight: 600; }
+.lb-review-body em { font-style: italic; }
+.lb-review-body a { color: #fff; }
+.lb-review-body a:hover { color: var(--color-lb-blue); }
+.lb-review-body ul { list-style: disc; padding-left: 22px; }
+.lb-review-body ol { list-style: decimal; padding-left: 22px; }
+.lb-review-body li + li { margin-top: 2px; }
+.lb-review-body blockquote { border-left: 2px solid var(--color-lb-line); padding-left: 14px; font-style: italic; }
+.lb-review-body img { display: block; max-width: 100%; margin: 10px 0; border-radius: 3px; }
+.lb-review-body code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: rgba(255,255,255,0.08); border-radius: 3px; padding: 1px 5px; }
+.lb-review-body pre { margin: 10px 0; overflow-x: auto; border-radius: 3px; background: #0f1317; padding: 12px 14px; line-height: 1.5; }
+.lb-review-body pre code { background: none; padding: 0; }
+.lb-review-body hr { border-color: var(--color-lb-line); margin: 12px 0; }
+.lb-review-table { overflow-x: auto; margin: 10px 0; }
+.lb-review-body table { border-collapse: collapse; font-family: var(--font-lb); font-size: 13px; line-height: 1.5; }
+.lb-review-body th, .lb-review-body td { border-bottom: 1px solid rgba(68, 85, 102, 0.5); padding: 6px 14px 6px 0; text-align: left; vertical-align: top; }
+.lb-review-body th { color: var(--color-lb-heading); font-weight: 600; }
+.lb-review-body thead th:empty { display: none; }
+.lb-review-collapsed {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+}
+
+/* Film page: the "Where to watch" box under the poster. */
+.lb-watch {
+  margin-top: 26px;
+  border: 1px solid #2c3440;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.lb-root .lb-watch-heading {
+  display: flex;
+  align-items: center;
+  height: 35px;
+  padding: 0 10px;
+  background: #1f262d;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-lb-text);
+}
+.lb-watch-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  margin: 0 10px;
+  border-top: 1px solid #2c3440;
+}
+.lb-watch-heading + .lb-watch-row { border-top: 0; }
+.lb-watch-tag {
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: #283038;
+  padding: 0 5px;
+  font-size: 9.5px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-lb-muted);
+}
+/* Posters: 2:3 with Letterboxd's inset hairline; green frame on hover */
+.lb-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-lb-panel);
+  display: block;
+}
+.lb-poster::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  transition: box-shadow 120ms ease;
+}
+a.lb-poster:hover::after, button.lb-poster:hover::after {
+  box-shadow: inset 0 0 0 2px var(--color-lb-green);
+}
+
+/* Journal articles reuse the lyric markdown renderer without its dimming */
+.lb-article section {
+  color: #bbccdd;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+.lb-article .lyric-markdown a { text-decoration-color: rgba(64, 188, 244, 0.6); color: var(--color-lb-heading); }
+.lb-article .lyric-markdown blockquote { border-color: var(--color-lb-blue); }
+.lb-article .lyric-markdown th { border-color: var(--color-lb-line); }
+.lb-article .lyric-markdown pre { background: #0f1317; }
+.lb-article .lyric-markdown code { background: rgba(255,255,255,0.08); }
+.lb-article h1, .lb-article h2, .lb-article h3 { color: var(--color-lb-heading); border-color: var(--color-lb-line); }
+
+/* Admin README editor preview: plain GitHub-ish markdown (Tailwind's reset
+   strips heading/list styling). */
+.readme-preview { font-size: 14px; line-height: 1.6; }
+.readme-preview > * + * { margin-top: 0.75em; }
+.readme-preview h1 { font-size: 1.7em; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.25em; }
+.readme-preview h2 { font-size: 1.35em; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.2em; }
+.readme-preview h3 { font-size: 1.15em; font-weight: 600; }
+.readme-preview ul { list-style: disc; padding-left: 1.5em; }
+.readme-preview ol { list-style: decimal; padding-left: 1.5em; }
+.readme-preview a { text-decoration: underline; }
+.readme-preview blockquote { border-left: 3px solid rgba(255,255,255,0.25); padding-left: 0.9em; color: rgba(255,255,255,0.7); }
+.readme-preview code { background: rgba(255,255,255,0.1); border-radius: 4px; padding: 0.1em 0.35em; font-size: 0.9em; }
+.readme-preview pre { background: #161616; border-radius: 6px; padding: 0.8em 1em; overflow-x: auto; }
+.readme-preview pre code { background: none; padding: 0; }
+.readme-preview table { border-collapse: collapse; }
+.readme-preview th, .readme-preview td { border: 1px solid rgba(255,255,255,0.15); padding: 0.3em 0.7em; }
+.readme-preview img { max-width: 100%; border-radius: 6px; }
+
+/* Letterboxd header wordmark: the real one's white-to-grey face, a size up
+   and a weight heavier. */
+.lb-wordmark {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.25; /* room for the g's descender inside the clipped gradient */
+  letter-spacing: -0.035em;
+  background: linear-gradient(180deg, #ffffff 30%, #c9d1d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Spotify top bar: the Letterboxd mark as the mode switch. The arrow nudges
+   toward it and the mark gives a small hop every few seconds. */
+@keyframes lbSwitchNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+@keyframes lbSwitchHop {
+  0%, 82%, 100% { transform: translateY(0) rotate(0); }
+  86% { transform: translateY(-3px) rotate(-4deg); }
+  90% { transform: translateY(0) rotate(3deg); }
+  94% { transform: translateY(-1.5px) rotate(0); }
+}
+.lb-switch-arrow { animation: lbSwitchNudge 1.4s ease-in-out infinite; }
+.lb-switch-mark > svg { animation: lbSwitchHop 4.5s ease-in-out infinite; }
+.lb-switch:hover .lb-switch-mark > svg { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-switch-arrow, .lb-switch-mark > svg { animation: none !important; }
 }

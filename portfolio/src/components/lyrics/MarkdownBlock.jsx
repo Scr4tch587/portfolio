@@ -6,11 +6,13 @@ const MEDIA_TYPES = new Set(['code', 'table', 'image']);
 
 // Spotify shading: already-sung lines fade well back, upcoming lines stay
 // clearly more readable than past ones, active line is pure white.
-function blockClasses({ isActive, isPast, type }) {
+function blockClasses({ isActive, isPast, type, isAnimated }) {
   // Code/table/image chunks carry their own colors (backgrounds, borders,
   // pixels), so wrapper text color won't dim them — fade the whole chunk.
   if (MEDIA_TYPES.has(type)) {
-    if (isActive) return 'opacity-100';
+    // GIFs keep playing whether or not they are the current line, so they
+    // stay at full brightness instead of dimming with the rest.
+    if (isActive || isAnimated) return 'opacity-100';
     return isPast ? 'opacity-25' : 'opacity-55';
   }
   if (isActive) {
@@ -112,7 +114,9 @@ function componentsForChunk(chunk) {
 }
 
 function MarkdownBlockComponent({ chunk, isActive, isPast, isContinuation }) {
-  const wrapperClass = `rounded-3xl transition-[color,opacity] duration-300 ease-out ${wrapperClassesForType(chunk, isContinuation)} ${blockClasses({ isActive, isPast, type: chunk.type })}`;
+  const isAnimated = chunk.type === 'image'
+    && (chunk.animationMs > 0 || /\.gif(?:[?#)]|$)/i.test(chunk.markdown || ''));
+  const wrapperClass = `rounded-3xl transition-[color,opacity] duration-300 ease-out ${wrapperClassesForType(chunk, isContinuation)} ${blockClasses({ isActive, isPast, type: chunk.type, isAnimated })}`;
 
   return (
     <section className={wrapperClass}>

@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { User } from 'lucide-react';
-import { SpBell, SpBrowse, SpHome, SpPlay, SpSearchGlyph } from './icons/SpotifyIcons';
-import { useAuth } from '../context/AuthContext';
+import React, { useMemo, useRef, useState } from 'react';
+import { SpBrowse, SpHome, SpPlay, SpSearchGlyph } from './icons/SpotifyIcons';
 import { usePlayer } from '../context/PlayerContext';
-import { useMyProfile } from '../hooks/useUserProfile';
-import { useConversations } from '../hooks/useConversations';
-import { useFollowerNotifications } from '../hooks/useFollowerNotifications';
-import { searchPublicPlaylists, searchUsers } from '../lib/searchDirectory';
+import { useSiteMode } from '../context/ModeContext';
+import { MODE_LETTERBOXD } from '../lib/siteMode';
+import { lbHref } from '../letterboxd/lbRoute';
+import { projectSlug } from '../letterboxd/lbData';
+import LbMark from '../letterboxd/LbMark';
 import SearchOverlay from './SearchOverlay';
 
 const TopBar = ({ scrollY }) => {
@@ -18,68 +17,21 @@ const TopBar = ({ scrollY }) => {
     playProject,
     playRandomProject,
     openDiscographyAll,
-    openWhatsNew,
     goHome,
-    openProfile,
-    openPlaylist,
-    openMessages,
+    mainView,
+    currentProject,
+    rightSidebarOpen,
   } = usePlayer();
 
-  const { user, signInWithGoogle, signOutUser } = useAuth();
-  const { profile } = useMyProfile();
-  const { unreadCount } = useConversations();
-  const { newCount: newFollowerCount } = useFollowerNotifications();
-  const bellCount = unreadCount + newFollowerCount;
-  const [focused, setFocused] = useState(false);
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [directoryResults, setDirectoryResults] = useState({ users: [], playlists: [] });
-  const searchInputRef = useRef(null);
-  const accountMenuRef = useRef(null);
+  const { switchTo } = useSiteMode();
 
-  // Users + public playlists come from Firestore; debounce behind the
-  // keystroke so search stays snappy.
-  useEffect(() => {
-    const term = searchQuery.trim();
-    if (term.length < 2) {
-      setDirectoryResults({ users: [], playlists: [] });
-      return undefined;
-    }
-    const timer = setTimeout(async () => {
-      const [foundUsers, foundPlaylists] = await Promise.all([
-        searchUsers(term).catch(() => []),
-        searchPublicPlaylists(term).catch(() => []),
-      ]);
-      setDirectoryResults({ users: foundUsers, playlists: foundPlaylists });
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (!accountMenuOpen) return undefined;
-    const handleClickOutside = (event) => {
-      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target)) {
-        setAccountMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [accountMenuOpen]);
-
-  const handleAccountClick = async () => {
-    if (user) {
-      setAccountMenuOpen((prev) => !prev);
-      return;
-    }
-    try {
-      await signInWithGoogle();
-    } catch (signInError) {
-      const code = String(signInError?.code || '');
-      if (!code.includes('popup-closed-by-user') && !code.includes('cancelled-popup-request')) {
-        // Real failures (unauthorized domain, popup blocked) must not vanish.
-        console.error('Google sign-in failed:', signInError);
-      }
-    }
+  // Land on the film page of whatever is selected, else the Letterboxd home.
+  const switchToLetterboxd = () => {
+    const showingProject = currentProject && (mainView === 'lyrics' || rightSidebarOpen);
+    switchTo(MODE_LETTERBOXD, { hash: showingProject ? lbHref.film(projectSlug(currentProject)) : lbHref.home() });
   };
+  const [focused, setFocused] = useState(false);
+  const searchInputRef = useRef(null);
 
   const results = useMemo(
     () => searchProjects(searchQuery, allProjectsList),
@@ -168,19 +120,7 @@ const TopBar = ({ scrollY }) => {
           {focused && searchQuery.trim() && (
             <SearchOverlay
               results={results}
-              users={directoryResults.users}
-              playlists={directoryResults.playlists}
               onSelect={handleSelect}
-              onSelectUser={(person) => {
-                openProfile(person.username);
-                setSearchQuery('');
-                setFocused(false);
-              }}
-              onSelectPlaylist={(playlist) => {
-                openPlaylist(playlist.id);
-                setSearchQuery('');
-                setFocused(false);
-              }}
               onClose={() => setFocused(false)}
             />
           )}
@@ -188,103 +128,25 @@ const TopBar = ({ scrollY }) => {
       </div>
 
       <div className="shrink-0 hidden md:flex items-center gap-7 text-gray-300">
-        <div className="relative group">
-          <button
-            type="button"
-            onClick={openWhatsNew}
-            className="hover:text-white relative"
-            aria-label="What's new"
-          >
-            <SpBell size={16} />
-            {bellCount > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-green-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
-                {bellCount > 9 ? '9+' : bellCount}
-              </span>
-            )}
-          </button>
-          <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            What&apos;s new
+        <button
+          type="button"
+          onClick={switchToLetterboxd}
+          className="lb-switch group flex items-center gap-2"
+          aria-label="Switch to Letterboxd mode"
+        >
+          <span className="lb-switch-hint flex items-center gap-1 text-xs font-medium text-[#8a8a8a] transition-colors group-hover:text-white" aria-hidden="true">
+            try me
+            <svg className="lb-switch-arrow" width="20" height="12" viewBox="0 0 20 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 8.5C5 3.5 11 3 17.5 6" />
+              <path d="M13.5 2.5 18 6.2l-5 2.6" />
+            </svg>
           </span>
-        </div>
+          <span className="lb-switch-mark flex h-9 items-center rounded-full bg-[#14181c] px-2.5 ring-1 ring-white/10 transition-transform group-hover:scale-110">
+            <LbMark size={14} />
+          </span>
+        </button>
       </div>
 
-      <div className="shrink-0">
-        <div className="relative group" ref={accountMenuRef}>
-          {user ? (
-            <button
-              type="button"
-              onClick={handleAccountClick}
-              className="w-12 h-12 rounded-full bg-[#1f1f1f] hover:bg-[#2a2a2a] hover:scale-105 transition-all flex items-center justify-center text-gray-300 hover:text-white"
-              aria-label="Account menu"
-            >
-              <span className="w-8 h-8 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-center overflow-hidden">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                ) : (
-                  <User size={16} />
-                )}
-              </span>
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-green-500 rounded-full ring-2 ring-black" aria-label={`${unreadCount} unread conversations`} />
-              )}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAccountClick}
-              className="h-12 px-8 rounded-full bg-white text-black text-base font-bold hover:scale-105 transition-transform whitespace-nowrap"
-            >
-              Sign up
-            </button>
-          )}
-          {!accountMenuOpen && user && (
-            <span className="pointer-events-none absolute top-full right-0 mt-2 text-xs bg-[#282828] text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              {user.displayName || user.email}
-            </span>
-          )}
-          {accountMenuOpen && user && (
-            <div className="absolute top-full right-0 mt-2 w-48 rounded-md bg-[#282828] shadow-xl py-1 z-50">
-              {profile?.username && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAccountMenuOpen(false);
-                    openProfile(profile.username);
-                  }}
-                  className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10"
-                >
-                  Profile
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setAccountMenuOpen(false);
-                  openMessages({});
-                }}
-                className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10 flex items-center justify-between"
-              >
-                Messages
-                {unreadCount > 0 && (
-                  <span className="min-w-4 h-4 px-1 bg-green-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  setAccountMenuOpen(false);
-                  await signOutUser();
-                }}
-                className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10"
-              >
-                Sign out
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
     </header>
   );
 };

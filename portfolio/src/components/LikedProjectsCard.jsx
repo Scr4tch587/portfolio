@@ -1,9 +1,10 @@
 import React from 'react';
 import { usePlayer } from '../context/PlayerContext';
-import profileImage from '../assets/profilephoto1.jpg';
+import { useSiteProfile } from '../hooks/useSiteProfile';
 
 const LikedProjectsCard = () => {
   const { likedCount, openLikedSongs } = usePlayer();
+  const { avatar: profileImage } = useSiteProfile();
 
   return (
     <button

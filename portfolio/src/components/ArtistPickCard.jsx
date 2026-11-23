@@ -1,9 +1,10 @@
 import React from 'react';
 import { usePlayer } from '../context/PlayerContext';
-import profileImage from '../assets/profilephoto1.jpg';
+import { useSiteProfile } from '../hooks/useSiteProfile';
 
-const ArtistPickCard = ({ project, descriptor = 'se 101 project' }) => {
+const ArtistPickCard = ({ project, descriptor = '' }) => {
   const { playProject, currentProject, togglePlay } = usePlayer();
+  const { avatar: profileImage } = useSiteProfile();
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -35,7 +36,7 @@ const ArtistPickCard = ({ project, descriptor = 'se 101 project' }) => {
           </div>
 
           <div>
-            <span onClick={handleClick} className="text-2xl font-bold text-white block hover:underline cursor-pointer">{project ? project.title : 'Super.com'}</span>
+            <span onClick={handleClick} className="text-2xl font-bold text-white block hover:underline cursor-pointer">{project?.title || ''}</span>
             <span className="text-sm text-gray-400">Album</span>
           </div>
         </div>

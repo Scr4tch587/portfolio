@@ -3,6 +3,9 @@ import Layout from './components/Layout'
 import LoadingScreen from './components/LoadingScreen'
 import MainArea from './components/MainArea'
 import { PlayerProvider } from './context/PlayerContext'
+import { ModeProvider, useSiteMode } from './context/ModeContext'
+import { MODE_LETTERBOXD } from './lib/siteMode'
+import LetterboxdApp from './letterboxd/LetterboxdApp'
 
 const ENABLE_MOBILE_UNSUPPORTED_PAGE = true
 
@@ -10,6 +13,21 @@ const isMobileDevice = () => {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent || ''
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
+}
+
+/** Picks the skin. Both share PlayerProvider (catalog, likes, lists, auth). */
+function Skin() {
+  const { mode, hasSwitched } = useSiteMode()
+  if (mode === MODE_LETTERBOXD) {
+    return <LetterboxdApp />
+  }
+  return (
+    <LoadingScreen skip={hasSwitched}>
+      <Layout>
+        <MainArea />
+      </Layout>
+    </LoadingScreen>
+  )
 }
 
 function App() {
@@ -36,11 +54,9 @@ function App() {
 
   return (
     <PlayerProvider>
-      <LoadingScreen>
-        <Layout>
-          <MainArea />
-        </Layout>
-      </LoadingScreen>
+      <ModeProvider>
+        <Skin />
+      </ModeProvider>
     </PlayerProvider>
   )
 }

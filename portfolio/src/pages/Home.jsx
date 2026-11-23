@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SpPlay, SpPause, SpChevronLeft, SpChevronDown, SpChevronUp, SpMore } from '../components/icons/SpotifyIcons';
-import AddToPlaylistMenu from '../components/AddToPlaylistMenu';
+import { SpPlay, SpPause, SpChevronLeft, SpChevronDown, SpChevronUp } from '../components/icons/SpotifyIcons';
 import SecondaryCapsuleButton from '../components/SecondaryCapsuleButton';
 import LikeButton from '../components/LikeButton';
 import { usePlayer } from '../context/PlayerContext';
@@ -9,16 +8,16 @@ import SocialsMenu from '../components/SocialsMenu';
 import StreamCounter from '../components/StreamCounter';
 import LikedProjectsCard from '../components/LikedProjectsCard';
 import ArtistPickCard from '../components/ArtistPickCard';
+import { SECTION_ALBUMS, SECTION_LABELS, SECTION_POPULAR, SECTION_SINGLES, byPriority, sectionItems } from '../lib/discography';
 import { useMonthlyListeners } from '../hooks/useMonthlyListeners';
+import { DEFAULT_BIO, useSiteProfile } from '../hooks/useSiteProfile';
 import { touchVisitor } from '../lib/visitorMetrics';
-import aboutImage from '../assets/profilephoto1.jpg';
-import profilePhoto2 from '../assets/profilephoto2.jpg';
-import profilePhoto4 from '../assets/profilephoto4.jpg';
-import profilePhoto5 from '../assets/profilephoto5.jpg';
 import herobackground from '../assets/herobackground.jpg';
 import waterlooCrest from '../assets/waterloo_logo.webp';
 import sewebring from '../assets/sewebring.svg';
 import SewringMenu from '../components/SewringMenu';
+
+const DISCOGRAPHY_SECTIONS = [SECTION_POPULAR, SECTION_ALBUMS, SECTION_SINGLES];
 
 const Home = () => {
   const {
@@ -36,7 +35,7 @@ const Home = () => {
     homeNavigationTrigger,
     getDisplayDuration,
   } = usePlayer();
-  const [discographyFilter, setDiscographyFilter] = useState('albums');
+  const [discographyFilter, setDiscographyFilter] = useState(SECTION_POPULAR);
   const [showAllDiscography, setShowAllDiscography] = useState(false);
   const [showAllFilter, setShowAllFilter] = useState('all');
   const [showAllDropdownOpen, setShowAllDropdownOpen] = useState(false);
@@ -45,20 +44,21 @@ const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSocialsMenuOpen, setIsSocialsMenuOpen] = useState(false);
   const [isSewringOpen, setIsSewringOpen] = useState(false);
-  const [playlistMenuProject, setPlaylistMenuProject] = useState(null);
   const [popularLimit, setPopularLimit] = useState(5);
   const [visibleDiscographyCount, setVisibleDiscographyCount] = useState(null);
   const followButtonRef = useRef(null);
   const sewebringButtonRef = useRef(null);
   const discographyRowRef = useRef(null);
 
-  const galleryImages = [aboutImage, profilePhoto2, profilePhoto4, profilePhoto5];
 
   // The catalog is subscribed at the provider level (PlayerContext).
   const allProjects = allProjectsList;
   const firestoreInitialized = projectsLoaded;
   const hasAutoSelected = useRef(false);
   const monthlyVisitorCount = useMonthlyListeners();
+  const { bio, gallery: galleryImages } = useSiteProfile();
+  // The saved list can shrink while the dialog is closed; stay in range.
+  const galleryIndex = Math.min(currentImageIndex, galleryImages.length - 1);
 
 
   useEffect(() => {
@@ -148,7 +148,7 @@ const Home = () => {
       resizeObserver.disconnect();
       window.removeEventListener('resize', updateVisibleCount);
     };
-  }, [rightSidebarOpen, showAllDiscography, discographyFilter, allProjects.length]);
+  }, [rightSidebarOpen, showAllDiscography, discographyFilter, allProjects]);
 
   const handlePlay = (projectToPlay) => {
     if (currentProject?.id === projectToPlay.id) {
@@ -167,34 +167,22 @@ const Home = () => {
 
   const allDiscographyItems = [...allProjects]
     .filter((project) => project.title)
-    .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+    .sort(byPriority);
 
-  const albumItems = allDiscographyItems.filter((project) => project.type === 'Album');
-  const singleItems = allDiscographyItems.filter((project) => project.type === 'Single');
-  const epItems = allDiscographyItems.filter((project) => project.type === 'EP');
-
-  const filteredDiscography = (
-    discographyFilter === 'albums' ? albumItems : discographyFilter === 'singles' ? singleItems : epItems
-  ).sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+  // A section with nothing in it (e.g. Popular releases before any project
+  // has been picked for it) doesn't get a tab.
+  const discographySections = DISCOGRAPHY_SECTIONS.filter((section) => sectionItems(section, allDiscographyItems).length > 0);
+  const activeSection = discographySections.includes(discographyFilter) ? discographyFilter : (discographySections[0] || SECTION_ALBUMS);
+  const filteredDiscography = sectionItems(activeSection, allDiscographyItems);
   const visibleDiscography = visibleDiscographyCount
     ? filteredDiscography.slice(0, visibleDiscographyCount)
     : filteredDiscography;
 
   const showAllFilteredItems = showAllFilter === 'all'
     ? allDiscographyItems
-    : showAllFilter === 'albums'
-      ? albumItems
-      : showAllFilter === 'singles'
-        ? singleItems
-        : epItems;
+    : sectionItems(showAllFilter, allDiscographyItems);
 
-  const showAllFilterLabel = showAllFilter === 'all'
-    ? 'All'
-    : showAllFilter === 'albums'
-      ? 'Albums'
-      : showAllFilter === 'singles'
-        ? 'Singles'
-        : 'EPs';
+  const showAllFilterLabel = showAllFilter === 'all' ? 'All' : SECTION_LABELS[showAllFilter];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -332,7 +320,7 @@ const Home = () => {
                     <LikedProjectsCard />
                     {/* pass the Super.com project */}
                     <div className="mr-16">
-                      <ArtistPickCard project={allProjects.find((project) => project.id === 98)} descriptor="summer 26 coop" />
+                      <ArtistPickCard project={allProjects.find((project) => project.title === 'Shopify')} descriptor="Winter 2027" />
                     </div>
                   </div>
                 </div>
@@ -392,17 +380,6 @@ const Home = () => {
                                             />
                                 </span>
                                 <span className="text-sm">{getDisplayDuration(project)}</span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setPlaylistMenuProject(project);
-                                  }}
-                                  aria-label="Add to playlist"
-                                  className="group-hover:opacity-100 opacity-0 transition-opacity text-[#b3b3b3] hover:text-white"
-                                >
-                                  <SpMore size={16} />
-                                </button>
                             </span>
                         </div>
                     ))}
@@ -442,8 +419,8 @@ const Home = () => {
                       </button>
                       {showAllDropdownOpen && (
                         <div className="absolute right-0 top-full mt-2 bg-[#282828] rounded-md shadow-xl py-1 z-50 min-w-[160px]">
-                          {['all', 'albums', 'singles', 'eps'].map((filter) => {
-                            const label = filter === 'all' ? 'All' : filter === 'albums' ? 'Albums' : filter === 'singles' ? 'Singles' : 'EPs';
+                          {['all', SECTION_ALBUMS, SECTION_SINGLES].map((filter) => {
+                            const label = filter === 'all' ? 'All' : SECTION_LABELS[filter];
                             const isActive = showAllFilter === filter;
                             return (
                               <button
@@ -492,7 +469,7 @@ const Home = () => {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold text-left">Discography</h2>
                     <button
-                      onClick={() => { setShowAllFilter(discographyFilter); setShowAllDiscography(true); }}
+                      onClick={() => { setShowAllFilter(activeSection === SECTION_POPULAR ? 'all' : activeSection); setShowAllDiscography(true); }}
                       className="text-sm font-bold text-[#b3b3b3] hover:text-white transition-colors"
                     >
                       Show all
@@ -501,24 +478,15 @@ const Home = () => {
 
                   {/* Filter Tabs */}
                   <div className="flex gap-2 mb-4">
-                      <button
-                          onClick={() => setDiscographyFilter('albums')}
-                          className={`px-3 py-1 rounded-full text-sm font-normal leading-6 transition-colors ${discographyFilter === 'albums' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                      >
-                          Albums
-                      </button>
-                      <button
-                          onClick={() => setDiscographyFilter('singles')}
-                          className={`px-3 py-1 rounded-full text-sm font-normal leading-6 transition-colors ${discographyFilter === 'singles' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                      >
-                          Singles
-                      </button>
-                      <button
-                          onClick={() => setDiscographyFilter('eps')}
-                          className={`px-3 py-1 rounded-full text-sm font-normal leading-6 transition-colors ${discographyFilter === 'eps' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                      >
-                          EPs
-                      </button>
+                      {discographySections.map((section) => (
+                        <button
+                            key={section}
+                            onClick={() => setDiscographyFilter(section)}
+                            className={`px-3 py-1 rounded-full text-sm font-normal leading-6 transition-colors ${activeSection === section ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                        >
+                            {SECTION_LABELS[section]}
+                        </button>
+                      ))}
                   </div>
 
                   <div ref={discographyRowRef} className="flex -mx-3 overflow-hidden pb-3">
@@ -554,15 +522,15 @@ const Home = () => {
                 <div 
                     onClick={() => setIsGalleryOpen(true)}
                     className="relative w-full max-w-[824px] h-[516px] rounded-lg bg-cover bg-center overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform duration-300 group"
-                    style={{ backgroundImage: `url(${aboutImage})`, backgroundPosition: 'center 45%' }}
+                    style={{ backgroundImage: `url(${galleryImages[0]})`, backgroundPosition: 'center 45%' }}
                 >
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors"></div>
                     <div className="absolute bottom-8 left-8 z-10">
                         <p className="text-white text-base font-bold">
                           {monthlyVisitorCount.toLocaleString()} monthly visitors
                         </p>
-                        <p className="text-white text-base line-clamp-3 max-w-2xl">
-                            vancouver -&gt; waterloo. thanks for stopping by!
+                        <p className="text-white text-base line-clamp-3 max-w-2xl whitespace-pre-line" data-testid="about-bio">
+                            {bio ?? DEFAULT_BIO}
                         </p>
                     </div>
                 </div>
@@ -573,15 +541,12 @@ const Home = () => {
       <ImageGalleryModal
         isOpen={isGalleryOpen}
         images={galleryImages}
-        currentImageIndex={currentImageIndex}
+        monthlyVisitors={monthlyVisitorCount}
+        bio={bio ?? DEFAULT_BIO}
+        currentImageIndex={galleryIndex}
         onClose={() => setIsGalleryOpen(false)}
         onPrev={handlePrevImage}
         onNext={handleNextImage}
-      />
-      <AddToPlaylistMenu
-        project={playlistMenuProject}
-        isOpen={Boolean(playlistMenuProject)}
-        onClose={() => setPlaylistMenuProject(null)}
       />
     </div>
   );

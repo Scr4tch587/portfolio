@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useAuth } from './AuthContext';
 
 const PlayerContext = createContext();
 
@@ -116,13 +115,28 @@ const PlaybackClockProvider = ({ isPlaying, durationSeconds, playbackEpoch, chil
   );
 };
 
+// Firestore doc ids are strings; app project ids are numbers when numeric
+// (same normalization the admin panel uses).
+const normalizeProjectId = (rawId) => {
+  const asNumber = Number.parseInt(rawId, 10);
+  return Number.isNaN(asNumber) ? rawId : asNumber;
+};
+
+const LIKES_STORAGE_KEY = 'likedProjectIds';
+
+const readStoredLikes = () => {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(LIKES_STORAGE_KEY) || '[]');
+    return new Set(Array.isArray(stored) ? stored.map(normalizeProjectId) : []);
+  } catch {
+    return new Set();
+  }
+};
+
 export const PlayerProvider = ({ children }) => {
-  const { user } = useAuth();
   const [currentProject, setCurrentProject] = useState(null);
-  // 'home' | 'lyrics' | 'profile' | 'playlist' | 'messages'
+  // 'home' | 'lyrics'
   const [mainView, setMainView] = useState('home');
-  // Parameters for the non-home views: { username?, playlistId?, convId?, toUsername? }
-  const [viewParams, setViewParams] = useState({});
   const [isPlaying, setIsPlaying] = useState(false);
   const [durationSeconds, setDurationSeconds] = useState(0);
   // Incremented on every playProject() so the clock restarts at 0:00.
@@ -139,20 +153,12 @@ export const PlayerProvider = ({ children }) => {
     streamSeqRef.current += 1;
     setStreamEvent({ seq: streamSeqRef.current, project });
   };
-  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [allProjectsList, setAllProjectsList] = useState([]);
   const [projectsLoaded, setProjectsLoaded] = useState(false);
 
-  // Firestore doc ids are strings; app project ids are numbers when numeric
-  // (same normalization the admin panel uses).
-  const normalizeProjectId = (rawId) => {
-    const asNumber = Number.parseInt(rawId, 10);
-    return Number.isNaN(asNumber) ? rawId : asNumber;
-  };
-
   // The catalog subscription lives at the provider level (not in Home) so
-  // deep-linked views (playlist/profile) and the loading screen have data
-  // even when Home never mounts.
+  // the Letterboxd skin and the loading screen have data even when Home
+  // never mounts.
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, 'projects'),
@@ -172,7 +178,7 @@ export const PlayerProvider = ({ children }) => {
             };
           })
           .filter((project) => project.title)
-          .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+          .sort((a, b) => (a.orderingPriority ?? 999) - (b.orderingPriority ?? 999));
         setAllProjectsList(projects);
         setProjectsLoaded(true);
       },
@@ -186,7 +192,6 @@ export const PlayerProvider = ({ children }) => {
   const [isShuffleOn, setIsShuffleOn] = useState(false);
   const [likedSongsOpen, setLikedSongsOpen] = useState(false);
   const [discographyOpenAllTrigger, setDiscographyOpenAllTrigger] = useState(0);
-  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [homeNavigationTrigger, setHomeNavigationTrigger] = useState(0);
 
   const parseDuration = (durationStr) => {
@@ -219,35 +224,14 @@ export const PlayerProvider = ({ children }) => {
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   };
 
-  const addToRecentlyPlayed = (project) => {
-    setRecentlyPlayed((prev) => {
-      const filtered = prev.filter((p) => p.id !== project.id);
-      return [project, ...filtered].slice(0, 10);
-    });
-  };
-
   const toggleRightSidebar = () => setRightSidebarOpen((prev) => !prev);
   const toggleShuffle = () => setIsShuffleOn((prev) => !prev);
   const openLikedSongs = () => setLikedSongsOpen(true);
   const closeLikedSongs = () => setLikedSongsOpen(false);
   const openDiscographyAll = () => setDiscographyOpenAllTrigger((prev) => prev + 1);
-  const openWhatsNew = () => setWhatsNewOpen(true);
-  const closeWhatsNew = () => setWhatsNewOpen(false);
   const goHome = () => {
     setMainView('home');
     setHomeNavigationTrigger((prev) => prev + 1);
-  };
-  const openProfile = (username) => {
-    setViewParams({ username });
-    setMainView('profile');
-  };
-  const openPlaylist = (playlistId) => {
-    setViewParams({ playlistId });
-    setMainView('playlist');
-  };
-  const openMessages = (params = {}) => {
-    setViewParams(params);
-    setMainView('messages');
   };
 
   const searchProjects = (query, projects) => {
@@ -325,12 +309,8 @@ export const PlayerProvider = ({ children }) => {
     const {
       openSidebar = true,
       switchView = true,
-      keepQueue = false,
       countStream = true,
     } = options;
-    // Playing outside an active queue (e.g. a home row) returns next/prev to
-    // the full catalog.
-    if (!keepQueue) setPlayQueue(null);
     setCurrentProject(project);
     if (switchView) {
       setMainView(isLyricsProjectReady(project) ? 'lyrics' : 'home');
@@ -341,7 +321,6 @@ export const PlayerProvider = ({ children }) => {
     setIsPlaying(true);
     setPlaybackEpoch((prev) => prev + 1);
     setDurationSeconds(getPlaybackDuration(project));
-    addToRecentlyPlayed(project);
     if (countStream) {
       pendingStreamProjectRef.current = null;
       emitStream(project);
@@ -350,20 +329,9 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
-  // Optional queue override: while set (e.g. playing a playlist), next/prev/
-  // shuffle draw from this list instead of the full catalog.
-  const [playQueue, setPlayQueue] = useState(null);
-
   const getPlayableProjects = () => {
-    if (playQueue && playQueue.length > 0) return playQueue;
     if (allProjectsList.length > 0) return allProjectsList;
     return currentProject ? [currentProject] : [];
-  };
-
-  const playFromQueue = (projects, startProject = null) => {
-    if (!Array.isArray(projects) || projects.length === 0) return;
-    setPlayQueue(projects);
-    playProject(startProject || projects[0], { keepQueue: true });
   };
 
   const playRandomProject = () => {
@@ -431,54 +399,21 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
-  // Liked IDs: in-memory for signed-out visitors (session only), mirrored to
-  // users/{uid}/likes for signed-in users so likes survive reload.
-  const [likedIds, setLikedIds] = useState(() => new Set());
-  const likedIdsRef = useRef(likedIds);
-  likedIdsRef.current = likedIds;
+  // Liked IDs live in this browser only (localStorage); there are no accounts.
+  const [likedIds, setLikedIds] = useState(readStoredLikes);
 
   useEffect(() => {
-    if (!user) {
-      setLikedIds(new Set());
-      return undefined;
+    try {
+      window.localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify([...likedIds]));
+    } catch {
+      // Private windows / blocked storage: likes just last for the session.
     }
-    // Merge likes gathered while signed out into the account, then mirror.
-    const pending = [...likedIdsRef.current];
-    if (pending.length > 0) {
-      const batch = writeBatch(db);
-      pending.forEach((id) => {
-        batch.set(
-          doc(db, 'users', user.uid, 'likes', String(id)),
-          { createdAt: serverTimestamp() },
-          { merge: true },
-        );
-      });
-      batch.commit().catch(() => {});
-    }
-    const unsubscribe = onSnapshot(
-      collection(db, 'users', user.uid, 'likes'),
-      (snapshot) => {
-        setLikedIds(new Set(snapshot.docs.map((likeDoc) => normalizeProjectId(likeDoc.id))));
-      },
-      () => {},
-    );
-    return () => unsubscribe();
-  }, [user]);
+  }, [likedIds]);
 
   const toggleLike = (projectId) => {
     if (!projectId && !currentProject) return;
     const id = projectId || currentProject.id;
-    const willLike = !likedIdsRef.current.has(id);
-
-    if (user) {
-      const likeRef = doc(db, 'users', user.uid, 'likes', String(id));
-      (willLike
-        ? setDoc(likeRef, { createdAt: serverTimestamp() })
-        : deleteDoc(likeRef)
-      ).catch(() => {});
-    }
-
-    // Optimistic local update; for signed-in users the snapshot confirms it.
+    const willLike = !likedIds.has(id);
     setLikedIds((prev) => {
       const next = new Set(prev);
       if (willLike) next.add(id);
@@ -499,7 +434,6 @@ export const PlayerProvider = ({ children }) => {
     return false;
   };
 
-  // Count of liked projects (in-memory)
   const likedCount = likedIds.size;
   const likedProjects = allProjectsList.filter((project) => likedIds.has(project.id));
 
@@ -575,7 +509,6 @@ export const PlayerProvider = ({ children }) => {
       togglePlay,
       durationSeconds,
       streamEvent,
-      recentlyPlayed,
       allProjectsList,
       setAllProjectsList,
       projectsLoaded,
@@ -595,17 +528,8 @@ export const PlayerProvider = ({ children }) => {
       likedProjects,
       discographyOpenAllTrigger,
       openDiscographyAll,
-      whatsNewOpen,
-      openWhatsNew,
-      closeWhatsNew,
       homeNavigationTrigger,
       goHome,
-      viewParams,
-      openProfile,
-      openPlaylist,
-      openMessages,
-      playQueue,
-      playFromQueue,
     }}>
       <PlaybackClockProvider
         isPlaying={isPlaying}

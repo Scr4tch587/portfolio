@@ -1,12 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import herobackground from '../assets/herobackground.jpg';
-import aboutImage from '../assets/profilephoto1.jpg';
-import profilePhoto2 from '../assets/profilephoto2.jpg';
-import profilePhoto4 from '../assets/profilephoto4.jpg';
-import profilePhoto5 from '../assets/profilephoto5.jpg';
 
-const STATIC_IMAGES = [herobackground, aboutImage, profilePhoto2, profilePhoto4, profilePhoto5];
+const STATIC_IMAGES = [herobackground];
 const TIMEOUT_MS = 8000;
 
 function preloadImage(src) {
@@ -18,7 +14,7 @@ function preloadImage(src) {
   });
 }
 
-const LoadingScreen = ({ children }) => {
+const LoadingScreen = ({ children, skip = false }) => {
   const { allProjectsList } = usePlayer();
   const [ready, setReady] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
@@ -44,7 +40,8 @@ const LoadingScreen = ({ children }) => {
     });
   }, [allProjectsList]);
 
-  if (ready) return children;
+  // A mode switch has already shown the site once; no second cold-load spinner.
+  if (ready || skip) return children;
 
   return (
     <>
