@@ -1,4 +1,4 @@
-const { randomUUID } = require('node:crypto');
+const { randomUUID, createHash } = require('node:crypto');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const logger = require('firebase-functions/logger');
@@ -21,12 +21,31 @@ const GITHUB_API_TOKEN = defineSecret('GITHUB_API_TOKEN');
 // weights instead of being scaled to the manually entered MM:SS.
 // 4.1.0: image chunks carry intrinsic dimensions; height-aware image weights.
 // 4.2.0: raw HTML <img> tags convert to markdown images before parsing.
-const GENERATOR_VERSION = '4.2.0';
+// 4.3.0: animated GIF chunks last one full playthrough (animationMs).
+// 4.3.1: image dimensions are recorded again (image-size v2 export fix).
+const GENERATOR_VERSION = '4.3.1';
 
 function assertAdmin(request) {
   if (request.auth?.token?.admin !== true) {
     throw new HttpsError('permission-denied', 'Admin access required.');
   }
+}
+
+// Projects without a GitHub repo get their README written by hand in the
+// admin panel. The markdown lives in readmeSources/{projectId} (admin-only,
+// kept off the public project doc) and runs through the same pipeline.
+const README_SOURCES = 'readmeSources';
+const MANUAL_REVISION_PREFIX = 'manual-';
+
+async function loadManualMarkdown(projectId) {
+  const snapshot = await admin.firestore().collection(README_SOURCES).doc(String(projectId)).get();
+  const markdown = snapshot.exists ? snapshot.data()?.markdown : '';
+  return typeof markdown === 'string' && markdown.trim() ? markdown : '';
+}
+
+// Stands in for the commit SHA: changes exactly when the content does.
+function manualRevision(markdown) {
+  return `${MANUAL_REVISION_PREFIX}${createHash('sha256').update(markdown, 'utf8').digest('hex').slice(0, 12)}`;
 }
 
 function getGithubHeaders(token) {
@@ -140,12 +159,13 @@ async function updateProjectReadyState({
   writtenReadme,
   processedReadme,
   warnings,
+  manual = false,
 }) {
   const processingStatus = warnings.some((warning) => warning.toLowerCase().includes('failed to cache image'))
     ? 'asset_error'
     : 'ready';
 
-  const githubSource = {
+  const githubSource = manual ? null : {
     owner: repoMeta.owner,
     repo: repoMeta.repo,
     fullName: repoMeta.fullName,
@@ -211,11 +231,11 @@ async function runProcessingJob({ projectId, trigger = 'cms_manual', requestedCo
   }
 
   const project = projectSnap.data();
-  const manualReadmeMarkdown = typeof project?.readmeMarkdown === 'string' ? project.readmeMarkdown : '';
+  const manualReadmeMarkdown = await loadManualMarkdown(projectId);
 
   if (!project?.github && !manualReadmeMarkdown) {
-    await setProjectFailure(projectRef, 'failed', 'Project does not have a GitHub URL or manual README content.');
-    throw new Error('Project does not have a GitHub URL or manual README content.');
+    await setProjectFailure(projectRef, 'failed', 'Project does not have a GitHub URL or a hand-written README.');
+    throw new Error('Project does not have a GitHub URL or a hand-written README.');
   }
 
   const token = GITHUB_API_TOKEN.value();
@@ -257,7 +277,7 @@ async function runProcessingJob({ projectId, trigger = 'cms_manual', requestedCo
     const { defaultBranch, commitSha } = usingManualReadme
       ? {
         defaultBranch: 'manual',
-        commitSha: requestedCommitSha || 'manual',
+        commitSha: manualRevision(manualReadmeMarkdown),
       }
       : await resolveRepoState({
         token,
@@ -266,14 +286,16 @@ async function runProcessingJob({ projectId, trigger = 'cms_manual', requestedCo
         requestedCommitSha,
       });
 
-    if (!usingManualReadme
-      && project.githubSource?.lastProcessedCommitSha === commitSha
+    const lastProcessedRevision = usingManualReadme
+      ? project.processedReadmeRef?.commitSha
+      : project.githubSource?.lastProcessedCommitSha;
+    if (lastProcessedRevision === commitSha
       && project.processedReadmeRef?.generatorVersion === GENERATOR_VERSION) {
       await jobRef.set({
         resolvedCommitSha: commitSha,
         status: 'success',
         finishedAt: admin.firestore.FieldValue.serverTimestamp(),
-        warnings: ['Skipped processing because the commit SHA is unchanged.'],
+        warnings: ['Skipped processing because the README source is unchanged.'],
       }, { merge: true });
       await projectRef.set({
         processingStatus: 'ready',
@@ -281,7 +303,7 @@ async function runProcessingJob({ projectId, trigger = 'cms_manual', requestedCo
       return { skipped: true, commitSha };
     }
 
-    let readmePath = 'README.md';
+    let readmePath = usingManualReadme ? 'MANUAL_README.md' : 'README.md';
     let markdown = manualReadmeMarkdown;
 
     if (!usingManualReadme) {
@@ -323,6 +345,7 @@ async function runProcessingJob({ projectId, trigger = 'cms_manual', requestedCo
         writtenReadme,
         processedReadme,
         warnings: processedReadme.warnings,
+        manual: usingManualReadme,
       });
       await jobRef.set({
         resolvedCommitSha: commitSha,
@@ -338,7 +361,7 @@ async function runProcessingJob({ projectId, trigger = 'cms_manual', requestedCo
     const cachedAssets = await cacheReadmeAssets({
       projectId: String(projectId),
       imageRefs: parsed.imageRefs,
-      context: { owner, repo, commitSha, readmePath },
+      context: { owner, repo, commitSha, readmePath, manual: usingManualReadme },
       warnings,
     });
     const chunks = buildReadmeLyricChunks({
@@ -375,6 +398,7 @@ async function runProcessingJob({ projectId, trigger = 'cms_manual', requestedCo
       writtenReadme,
       processedReadme,
       warnings,
+      manual: usingManualReadme,
     });
 
     await jobRef.set({
@@ -484,7 +508,7 @@ exports.reprocessAllReadmes = onCall(
     const queued = [];
     for (const doc of snapshot.docs) {
       const data = doc.data();
-      if (data?.github) {
+      if (data?.github || await loadManualMarkdown(doc.id)) {
         queued.push(await enqueueProcessingJob({
           projectId: doc.id,
           trigger: 'migration',
@@ -518,3 +542,5 @@ exports.onProcessingJobCreated = onDocumentCreated(
 exports.enqueueProcessingJob = enqueueProcessingJob;
 exports.runProcessingJob = runProcessingJob;
 exports.GITHUB_API_TOKEN = GITHUB_API_TOKEN;
+exports.loadManualMarkdown = loadManualMarkdown;
+exports.README_SOURCES = README_SOURCES;

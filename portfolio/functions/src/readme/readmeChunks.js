@@ -12,6 +12,10 @@ const TO_MARKDOWN_OPTIONS = { extensions: [gfmToMarkdown()] };
 const MIN_CHUNK_MS = 1100;
 const MAX_CHUNK_MS = 10000;
 const MIN_SENTENCE_WORDS = 5;
+// Animated GIFs hold the scroller for one full playthrough (not subject to
+// MAX_CHUNK_MS), plus a beat for the scroll to settle before playback starts.
+const ANIMATION_LEAD_MS = 600;
+const MAX_ANIMATION_MS = 60000;
 
 function cloneNode(node) {
   return JSON.parse(JSON.stringify(node));
@@ -207,6 +211,9 @@ function chunkWeight(chunk) {
       }
       return 2000 + (wordCount(chunk.plainText) * 95);
     case 'image': {
+      if (chunk.animationMs > 0) {
+        return ANIMATION_LEAD_MS + Math.min(chunk.animationMs, MAX_ANIMATION_MS);
+      }
       // Bigger images earn more dwell time; the renderer caps display height,
       // so intrinsic height is capped too before it buys duration.
       const height = Number.isFinite(chunk.imageHeight) ? chunk.imageHeight : 320;
@@ -227,7 +234,9 @@ function assignChunkTiming(chunks, targetDurationSec) {
   }
 
   const targetMs = Math.max(0, Math.round(targetDurationSec * 1000));
-  const weights = positiveChunks.map((chunk) => clamp(chunkWeight(chunk), MIN_CHUNK_MS, MAX_CHUNK_MS));
+  const weights = positiveChunks.map((chunk) => (
+    chunk.animationMs > 0 ? chunkWeight(chunk) : clamp(chunkWeight(chunk), MIN_CHUNK_MS, MAX_CHUNK_MS)
+  ));
   const rawTotal = weights.reduce((total, value) => total + value, 0) || 1;
   const effectiveTargetMs = targetMs > 0 ? targetMs : rawTotal;
   const scale = effectiveTargetMs / rawTotal;
@@ -308,6 +317,11 @@ function buildReadmeLyricChunks({ tree, assetMap, targetDurationSec = 0 }) {
             extra: {
               imageWidth: asset?.width || null,
               imageHeight: asset?.height || null,
+              ...(asset?.animationMs > 0 ? {
+                imageUrl: asset.downloadUrl,
+                animationMs: Math.min(asset.animationMs, MAX_ANIMATION_MS),
+                animationLeadMs: ANIMATION_LEAD_MS,
+              } : {}),
             },
           }));
           break;

@@ -1,7 +1,11 @@
 const crypto = require('node:crypto');
 const { randomUUID } = require('node:crypto');
-const sizeOf = require('image-size');
+// image-size v2 exports { imageSize }; v1 exported the function itself.
+const imageSizeModule = require('image-size');
+
+const sizeOf = typeof imageSizeModule === 'function' ? imageSizeModule : imageSizeModule.imageSize;
 const admin = require('firebase-admin');
+const { readGifInfo } = require('./gifInfo');
 
 const MAX_IMAGE_COUNT = 50;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -77,6 +81,9 @@ function resolveReadmeAssetUrl(originalUrl, context) {
   if (!originalUrl) return null;
   if (originalUrl.startsWith('data:')) return originalUrl;
   if (/^https?:\/\//i.test(originalUrl)) return originalUrl;
+  // Hand-written READMEs have no repo to resolve relative paths against;
+  // their images are uploaded from the admin editor and linked absolutely.
+  if (context.manual) return null;
 
   const basePath = context.readmePath.includes('/') ? context.readmePath.slice(0, context.readmePath.lastIndexOf('/') + 1) : '';
   const normalizedPath = originalUrl.startsWith('/') ? originalUrl.slice(1) : `${basePath}${originalUrl}`;
@@ -186,6 +193,11 @@ async function cacheReadmeAssets({ projectId, imageRefs, context, warnings }) {
         height = null;
       }
 
+      // Animated GIFs record one playthrough's length so the lyrics scroller
+      // can hold on them for exactly that long.
+      const gifInfo = normalizedType === 'image/gif' ? readGifInfo(buffer) : null;
+      const animationMs = gifInfo && gifInfo.frameCount > 1 ? gifInfo.durationMs : null;
+
       const asset = {
         assetId,
         contentHash,
@@ -196,6 +208,7 @@ async function cacheReadmeAssets({ projectId, imageRefs, context, warnings }) {
         byteSize: buffer.byteLength,
         width,
         height,
+        animationMs,
       };
 
       totalBytes += buffer.byteLength;

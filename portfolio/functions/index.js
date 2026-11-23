@@ -7,10 +7,11 @@ setGlobalOptions({
 
 module.exports = {
   ...require('./src/admin'),
-  ...require('./src/messages'),
   ...require('./src/registerStream'),
+  ...require('./src/rateProject'),
   ...require('./src/readme/processProjectReadme'),
   ...require('./src/readme/registerWebhook'),
   ...require('./src/readme/githubWebhook'),
   ...require('./src/triggers/onProjectWritten'),
+  ...require('./src/triggers/onReadmeSourceWritten'),
 };
