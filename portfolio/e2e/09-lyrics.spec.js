@@ -48,6 +48,17 @@ test.describe('lyrics view', () => {
     await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeVisible();
     await micButton.click();
     await expect(page.getByText('Streaming from GitHub commit')).toBeVisible();
+
+    // The close button in the top-right corner leaves the lyrics page...
+    await page.getByRole('button', { name: 'Close lyrics' }).click();
+    await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeVisible();
+    await micButton.click();
+    await expect(page.getByText('Streaming from GitHub commit')).toBeVisible();
+    // ...and so does Escape.
+    await page.getByRole('main').evaluate((el) => { el.scrollTop = 600; });
+    await expect(page.getByRole('button', { name: 'Close lyrics' })).toBeInViewport();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeVisible();
   });
 
   test('active lyrics block advances with playback', async ({ page, request }) => {

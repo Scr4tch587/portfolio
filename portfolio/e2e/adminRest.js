@@ -52,7 +52,9 @@ const DOC_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/dat
 /** PATCH a single field on a project document as the admin. */
 export async function setProjectField(request, docId, field, value) {
   const idToken = await getAdminIdToken(request);
-  const fieldValue = typeof value === 'number'
+  const fieldValue = value === null
+    ? { nullValue: null }
+    : typeof value === 'number'
     ? { integerValue: String(value) }
     : { stringValue: String(value) };
   const url = `${DOC_BASE}/projects/${encodeURIComponent(docId)}?updateMask.fieldPaths=${encodeURIComponent(field)}`;

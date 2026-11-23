@@ -61,23 +61,4 @@ test.describe('sidebars', () => {
     await rows.first().click();
     await expect(sidebar).toBeVisible();
   });
-
-  test('left sidebar records recently played and replays from it', async ({ page }) => {
-    await gotoHome(page);
-    const bar = playerBar(page);
-
-    // Play two different projects via next
-    const title1 = (await bar.locator('span.font-medium.text-sm').textContent()).trim();
-    await bar.getByRole('button', { name: 'Next project' }).click();
-    const title2 = (await bar.locator('span.font-medium.text-sm').textContent()).trim();
-
-    const aside = page.locator('aside');
-    // Both recents exist as buttons (aria-label = title)
-    await expect(aside.getByRole('button', { name: title1 })).toBeVisible();
-    await expect(aside.getByRole('button', { name: title2 })).toBeVisible();
-
-    // Click the older recent to play it again
-    await aside.getByRole('button', { name: title1 }).click();
-    await expect(bar.locator('span.font-medium.text-sm')).toHaveText(title1);
-  });
 });

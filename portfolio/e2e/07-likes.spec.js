@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { gotoHome, playerBar, popularRows } from './helpers.js';
 
 test.describe('likes', () => {
-  test('like from player bar updates liked count and sidebar badge', async ({ page }) => {
+  test('like from player bar updates liked count', async ({ page }) => {
     await gotoHome(page);
     const bar = playerBar(page);
 
@@ -10,8 +10,6 @@ test.describe('likes', () => {
 
     await bar.getByRole('button', { name: 'Like', exact: true }).click();
     await expect(page.getByText("You've liked 1 projects")).toBeVisible();
-    // Sidebar heart badge shows 1
-    await expect(page.locator('aside').getByRole('button', { name: 'Open liked songs' }).locator('span')).toHaveText('1');
 
     await bar.getByRole('button', { name: 'Unlike', exact: true }).click();
     await expect(page.getByText("You've liked 0 projects")).toBeVisible();
@@ -35,7 +33,7 @@ test.describe('likes', () => {
     await expect(page.getByRole('heading', { name: 'Liked Songs' })).toBeHidden();
 
     // Reopen via sidebar heart, play from modal
-    await page.locator('aside').getByRole('button', { name: 'Open liked songs' }).click();
+    await page.getByRole('button', { name: 'Open liked songs' }).click();
     await page.locator('.fixed.inset-0.z-\\[70\\]').getByText(currentTitle).first().click();
     await expect(page.getByRole('heading', { name: 'Liked Songs' })).toBeHidden();
     await expect(bar.locator('span.font-medium.text-sm')).toHaveText(currentTitle);
@@ -43,7 +41,7 @@ test.describe('likes', () => {
 
   test('empty liked songs modal shows the empty state', async ({ page }) => {
     await gotoHome(page);
-    await page.locator('aside').getByRole('button', { name: 'Open liked songs' }).click();
+    await page.getByRole('button', { name: 'Open liked songs' }).click();
     await expect(page.getByText('No liked songs yet.')).toBeVisible();
     await page.keyboard.press('Escape');
   });

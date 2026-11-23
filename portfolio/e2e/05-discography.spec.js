@@ -2,24 +2,31 @@ import { test, expect } from '@playwright/test';
 import { gotoHome, fetchProjects, sortByPriority, playerBar } from './helpers.js';
 
 test.describe('discography', () => {
-  test('filter tabs switch between albums, singles and EPs', async ({ page, request }) => {
+  test('tabs: popular releases (curated), albums, singles and EPs, each in its curated order', async ({ page, request }) => {
     const projects = sortByPriority(await fetchProjects(request));
     const albums = projects.filter((p) => p.type === 'Album');
-    const singles = projects.filter((p) => p.type === 'Single');
+    const singlesAndEps = projects.filter((p) => p.type !== 'Album');
+    const popular = projects
+      .filter((p) => Number.isFinite(p.popularRank))
+      .sort((a, b) => a.popularRank - b.popularRank);
+    const firstCard = page.locator('.w-\\[212px\\]').first().getByRole('heading', { level: 3 });
+    const tab = (name) => page.getByRole('button', { name, exact: true });
 
     await gotoHome(page);
-    // Default tab: albums
-    if (albums.length > 0) {
-      await expect(page.getByRole('heading', { name: albums[0].title, level: 3 })).toBeVisible();
+    // Popular releases only exists (and is the default tab) once curated.
+    if (popular.length > 0) {
+      await expect(tab('Popular releases')).toBeVisible();
+      await expect(firstCard).toHaveText(popular[0].title);
+    } else {
+      await expect(tab('Popular releases')).toHaveCount(0);
     }
-    if (singles.length > 0) {
-      await page.getByRole('button', { name: 'Singles', exact: true }).first().click();
-      await expect(page.getByRole('heading', { name: singles[0].title, level: 3 })).toBeVisible();
+    if (singlesAndEps.length > 0) {
+      await tab('Singles and EPs').click();
+      await expect(firstCard).toHaveText(singlesAndEps[0].title);
     }
-    await page.getByRole('button', { name: 'EPs', exact: true }).first().click();
-    await page.getByRole('button', { name: 'Albums', exact: true }).first().click();
     if (albums.length > 0) {
-      await expect(page.getByRole('heading', { name: albums[0].title, level: 3 })).toBeVisible();
+      await tab('Albums').click();
+      await expect(firstCard).toHaveText(albums[0].title);
     }
   });
 
@@ -33,8 +40,8 @@ test.describe('discography', () => {
     await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeHidden();
     await expect(page.getByRole('heading', { name: 'Discography' })).toBeVisible();
 
-    // Dropdown starts on the tab that was active (Albums by default)
-    const dropdownButton = page.locator('.relative > button', { hasText: /^(All|Albums|Singles|EPs)$/ }).first();
+    // Dropdown starts on the active tab's filter (All for Popular releases)
+    const dropdownButton = page.locator('.relative > button', { hasText: /^(All|Albums|Singles and EPs)$/ }).first();
     await dropdownButton.click();
     await page.getByRole('button', { name: 'All', exact: true }).click();
 
@@ -71,13 +78,5 @@ test.describe('discography', () => {
     await expect(page.getByRole('heading', { name: 'Kai Zhang', level: 1 })).toBeHidden();
     await expect(page.getByRole('heading', { name: 'Discography' })).toBeVisible();
     await page.keyboard.press('Escape');
-  });
-
-  test('left sidebar new-playlist button opens the create dialog', async ({ page }) => {
-    await gotoHome(page);
-    await page.getByRole('complementary').getByRole('button', { name: 'New playlist' }).click();
-    await expect(page.getByRole('heading', { name: 'New playlist' })).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('heading', { name: 'New playlist' })).toBeHidden();
   });
 });

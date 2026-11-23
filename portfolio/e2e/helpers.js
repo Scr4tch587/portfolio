@@ -42,7 +42,7 @@ function decodeFields(fields) {
 export function sortByPriority(projects) {
   return [...projects]
     .filter((p) => p.title)
-    .sort((a, b) => (a.orderingPriority || 999) - (b.orderingPriority || 999));
+    .sort((a, b) => (a.orderingPriority ?? 999) - (b.orderingPriority ?? 999));
 }
 
 export function popularOf(projects) {

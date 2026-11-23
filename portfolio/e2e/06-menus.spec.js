@@ -38,22 +38,6 @@ test.describe('menus and modals', () => {
     await expect(page.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/Scr4tch587');
   });
 
-  test("what's new bell opens the menu; filters and close work", async ({ page }) => {
-    await gotoHome(page);
-    await page.getByRole('button', { name: "What's new" }).click();
-    await expect(page.getByRole('heading', { name: "What's New" })).toBeVisible();
-    await expect(page.getByText('Latest updates from me.')).toBeVisible();
-
-    // Filter chips
-    const modal = page.locator('.fixed.inset-0.z-\\[80\\]');
-    await modal.getByRole('button', { name: 'Albums', exact: true }).click();
-    await modal.getByRole('button', { name: 'All', exact: true }).click();
-
-    // Escape closes
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('heading', { name: "What's New" })).toBeHidden();
-  });
-
   test('about image opens the gallery modal and arrows cycle', async ({ page }) => {
     await gotoHome(page);
     await page.getByText('monthly visitors').click();
@@ -68,10 +52,5 @@ test.describe('menus and modals', () => {
 
     await page.getByRole('button', { name: 'Close image gallery' }).click();
     await expect(page.getByText('1 / 4')).toBeHidden();
-  });
-
-  test('signed-out header shows a Sign up button', async ({ page }) => {
-    await gotoHome(page);
-    await expect(page.getByRole('banner').getByRole('button', { name: 'Sign up' })).toBeVisible();
   });
 });
