@@ -2,7 +2,7 @@
 
 ---
 
-A personal project showcase styled as a parody of the Spotify web player — down to Spotify's actual fonts, icon glyphs, and pixel-measured layout.
+A personal project showcase with two skins: a parody of the Spotify web player — down to Spotify's actual fonts, icon glyphs, and pixel-measured layout — and a Letterboxd mode where every project is a film you can rate. First visits get Spotify; the site remembers which mode you last left it in, and `#/lb…` links always open Letterboxd.
 
 Playing a project "streams" it, contributing to a live **Popular** list that ranks projects by total stream count — the more plays, the higher it climbs. Each project's README plays back as scrolling "lyrics", timed to the track.
 
@@ -10,13 +10,12 @@ Playing a project "streams" it, contributing to a live **Popular** list that ran
 
 - **Streaming system** — every play counts as a stream; counts increment server-side in Firestore and update live for every visitor
 - **README "lyrics"** — GitHub READMEs are processed by a Cloud Functions pipeline (text, code, tables, images) and auto-scroll in sync with playback; a GitHub webhook reprocesses on push
-- **Accounts** — Google sign-in with unique usernames, public profiles (bio, photo, follower/following counts), and follows
-- **Liked projects** — session-only for visitors; synced to your account and merged on sign-in
-- **Playlists** — build, reorder, and share playlists of projects (private / unlisted / public) with `#/playlist/…` deep links
-- **Direct messages** — username-addressed DMs between signed-in users, backed by rate-limited Cloud Functions with block lists and reporting
-- **Search** — projects, profiles, and public playlists from one search box
-- **Admin panel** — Google-sign-in gated (admin custom claim) panel for managing project data
+- **Hand-written READMEs** — experiences without a repo get a markdown README written in the admin panel (with image upload); it runs through the same pipeline and plays back the same way
+- **Liked projects** — no accounts; likes are remembered in the browser
+- **Search** — fuzzy, synonym-aware project search
+- **Admin panel** — Google-sign-in gated (admin custom claim) panel for managing project data; the only sign-in on the site
 - **Stream toasts & counters** — small UI moments that reward engagement
+- **Letterboxd mode** — the same catalog as a film site: the owner's profile is home, projects are films with posters, synopsis, stack/links/details tabs, a like + half-star rating action box and a ratings histogram; processed READMEs read as Journal long-reads. Ratings are anonymous, one per browser, with server-aggregated averages on the project (`rateProject` callable)
 
 ### Stack
 
